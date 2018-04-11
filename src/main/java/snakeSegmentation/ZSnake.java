@@ -28,7 +28,8 @@ public class ZSnake extends SwingWorker<Void, Void> {
 
 	@Override
 	protected Void doInBackground() throws Exception {
-
+		
+		
 		for (int z = parent.thirdDimensionsliderInit; z <= parent.thirdDimensionSize; ++z) {
 			parent.snakeinprogress = true;
 
@@ -51,7 +52,7 @@ public class ZSnake extends SwingWorker<Void, Void> {
 			Interval interval = Intervals.expand(spaceinterval, 10);
 			parent.CurrentView = Views.interval(Views.extendBorder(parent.CurrentView), interval);
 
-			SnakeonZ applysnake = new SnakeonZ(parent, parent.CurrentView, currentRoi);
+			SnakeonView applysnake = new SnakeonView(parent, parent.CurrentView, currentRoi);
 			applysnake.process();
 			resultrois = applysnake.getResult();
 			
@@ -71,6 +72,7 @@ public class ZSnake extends SwingWorker<Void, Void> {
 	@Override
 	protected void done() {
 		parent.snakeinprogress = false;
+		
 		try {
 			utility.ProgressBar.SetProgressBar(parent.jpb, "Done");
 			get();

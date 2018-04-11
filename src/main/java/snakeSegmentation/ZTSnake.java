@@ -28,7 +28,10 @@ public class ZTSnake extends SwingWorker<Void, Void> {
 
 	@Override
 	protected Void doInBackground() throws Exception {
-
+		parent.zslider.setEnabled(false);
+		parent.timeslider.setEnabled(false);
+		parent.inputFieldT.setEnabled(false);
+		parent.inputFieldZ.setEnabled(false);
 		for (int t = parent.fourthDimensionsliderInit; t <= parent.fourthDimensionSize; ++t) {
 
 			// For each T go in Z and make a 3D object to track with
@@ -39,22 +42,19 @@ public class ZTSnake extends SwingWorker<Void, Void> {
 
 				parent.thirdDimension = z;
 				parent.fourthDimension = t;
-				System.out.println(z + " " + t);
 				String uniqueID = Integer.toString(z) + Integer.toString(t);
 				
 				parent.CurrentView = utility.Slicer.getCurrentView(parent.originalimg, z, parent.thirdDimensionSize, t,
 						parent.fourthDimensionSize);
 				parent.updatePreview(ValueChange.THIRDDIMmouse);
-				ArrayList<PreRoiobject> currentRoi = parent.CurrentPreRoiobject;
-
 				// Expand the image by 10 pixels
-
+				ArrayList<PreRoiobject> currentRoi = parent.CurrentPreRoiobject;
 				Interval spaceinterval = Intervals.createMinMax(new long[] { parent.CurrentView.min(0),
 						parent.CurrentView.min(1), parent.CurrentView.max(0), parent.CurrentView.max(1) });
 				Interval interval = Intervals.expand(spaceinterval, 10);
 				parent.CurrentView = Views.interval(Views.extendBorder(parent.CurrentView), interval);
 
-				SnakeonZT applysnake = new SnakeonZT(parent, parent.CurrentView, currentRoi);
+				SnakeonView applysnake = new SnakeonView(parent, parent.CurrentView, currentRoi);
 				applysnake.process();
 				ArrayList<PreRoiobject> resultrois = applysnake.getResult();
 				parent.ZTRois.put(uniqueID, resultrois);
@@ -71,6 +71,7 @@ public class ZTSnake extends SwingWorker<Void, Void> {
 	@Override
 	protected void done() {
 		parent.snakeinprogress = false;
+		
 		try {
 			utility.ProgressBar.SetProgressBar(parent.jpb, "Done");
 			get();

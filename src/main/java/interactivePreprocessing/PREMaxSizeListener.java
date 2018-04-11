@@ -42,7 +42,7 @@ public class PREMaxSizeListener implements AdjustmentListener {
 		
 			scrollbar.setValue(utility.ScrollbarUtils.computeScrollbarPositionFromValue(parent.maxSize, min, max, scrollbarSize));
 
-			label.setText(string +  " = "  + parent.maxSize);
+			label.setText(string +  " = "  + parent.nf.format(parent.maxSize));
 
 	
 	}

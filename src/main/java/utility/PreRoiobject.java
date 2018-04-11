@@ -55,6 +55,7 @@ public class PreRoiobject extends AbstractEuclideanSpace implements RealLocaliza
 		putFeature( Z,Double.valueOf( thirdDimension ) );
 		putFeature( XPOSITION, Double.valueOf( geometriccenter[0] ) );
 		putFeature( YPOSITION, Double.valueOf( geometriccenter[1] ) );
+		
 		putFeature( ZPOSITION, Double.valueOf( geometriccenter[2] ) );
 	}
 	/*
@@ -128,6 +129,8 @@ public class PreRoiobject extends AbstractEuclideanSpace implements RealLocaliza
 
 		}
 
+		
+		
 		return new ValuePair<Double, Integer>(Intensity, NumberofPixels);
 
 	}
@@ -147,7 +150,7 @@ public class PreRoiobject extends AbstractEuclideanSpace implements RealLocaliza
 
 		
 
-		double IntensityDistance = 1 -  Math.pow((totalintensity / target.totalintensity), 2);
+		double IntensityDistance =  Math.pow((totalintensity - target.totalintensity), 2);
 
 		return IntensityDistance;
 	}

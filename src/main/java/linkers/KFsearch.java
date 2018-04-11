@@ -6,10 +6,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
+
+import javax.swing.JProgressBar;
 
 import net.imglib2.RealPoint;
 import utility.PreRoiobject;
+import utility.ThreeDRoiobject;
+import utility.ThreeDRoiobjectCollection;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,7 +25,9 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import costMatrix.CostFunction;
 import costMatrix.JaqamanLinkingCostMatrixCreator;
 
-public class KFsearch implements BlobTracker {
+
+
+public class KFsearch implements ThreeDBlobTracker {
 
 	private static final double ALTERNATIVE_COST_FACTOR = 1.05d;
 
@@ -28,41 +35,37 @@ public class KFsearch implements BlobTracker {
 
 	private static final String BASE_ERROR_MSG = "[KalmanTracker] ";
 
-	private final HashMap<String, ArrayList<PreRoiobject>> Allblobs;
-
+	private final ThreeDRoiobjectCollection Allblobs;
+    public final JProgressBar jpb;
 	private final double maxsearchRadius;
 	private final double initialsearchRadius;
-	private final CostFunction<PreRoiobject, PreRoiobject> UserchosenCostFunction;
-	private final int maxframe;
-	private final int centralZ;
-	private int currentframe;
+	private final CostFunction<ThreeDRoiobject, ThreeDRoiobject> UserchosenCostFunction;
 	private final int maxframeGap;
 	private HashMap<String, Integer> AccountedT;
-	private SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge> graph;
+	private SimpleWeightedGraph<ThreeDRoiobject, DefaultWeightedEdge> graph;
 
 	protected Logger logger = Logger.DEFAULT_LOGGER;
 	protected String errorMessage;
-	ArrayList<ArrayList<PreRoiobject>> Allblobscopy;
+	ArrayList<ArrayList<ThreeDRoiobject>> Allblobscopy;
+	private ThreeDRoiobjectCollection predictionsCollection;
 
-	public KFsearch(final HashMap<String, ArrayList<PreRoiobject>> Allblobs,
-			final CostFunction<PreRoiobject, PreRoiobject> UserchosenCostFunction, final double maxsearchRadius,
-			final double initialsearchRadius, final int currentframe, final int maxframe, final int maxframeGap,
-			int centralZ, final HashMap<String, Integer> AccountedT) {
+	public KFsearch(final  ThreeDRoiobjectCollection Allblobs,
+			final CostFunction<ThreeDRoiobject, ThreeDRoiobject> UserchosenCostFunction, final double maxsearchRadius,
+			final double initialsearchRadius, final int maxframeGap,
+			 final HashMap<String, Integer> AccountedT, final JProgressBar jpb) {
 
 		this.Allblobs = Allblobs;
+		this.jpb = jpb;
 		this.UserchosenCostFunction = UserchosenCostFunction;
 		this.initialsearchRadius = initialsearchRadius;
 		this.maxsearchRadius = maxsearchRadius;
-		this.maxframe = maxframe;
-		this.currentframe = currentframe;
 		this.maxframeGap = maxframeGap;
 		this.AccountedT = AccountedT;
-		this.centralZ = centralZ;
 
 	}
 
 	@Override
-	public SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge> getResult() {
+	public SimpleWeightedGraph<ThreeDRoiobject, DefaultWeightedEdge> getResult() {
 		return graph;
 	}
 
@@ -84,28 +87,22 @@ public class KFsearch implements BlobTracker {
 		 * Outputs
 		 */
 
-		graph = new SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		
+		System.out.println(AccountedT.size());
+		graph = new SimpleWeightedGraph<ThreeDRoiobject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		predictionsCollection = new ThreeDRoiobjectCollection();
+		
 
-		Iterator<Map.Entry<String, Integer>> it = AccountedT.entrySet().iterator();
-		int T = 0;
-		int nextT = 1;
-		while (it.hasNext()) {
+		
+		// Find first and second non-empty frames.
+		final NavigableSet< Integer > keySet = Allblobs.keySet();
+		final Iterator< Integer > frameIterator = keySet.iterator();
+		int uniqueID = frameIterator.next();
+		int uniqueIDnext = frameIterator.next();
+		
+		Collection<ThreeDRoiobject> Firstorphan = generateSpotList(Allblobs, uniqueID);
 
-			T = it.next().getValue();
-
-			while (it.hasNext()) {
-
-				nextT = it.next().getValue();
-
-			}
-		}
-
-		String uniqueID = Integer.toString(centralZ) + Integer.toString(T);
-		String uniqueIDnext = Integer.toString(centralZ) + Integer.toString(nextT);
-
-		Collection<PreRoiobject> Firstorphan = Allblobs.get(uniqueID);
-
-		Collection<PreRoiobject> Secondorphan = Allblobs.get(uniqueIDnext);
+		Collection<ThreeDRoiobject> Secondorphan = generateSpotList(Allblobs, uniqueIDnext);
 
 		// Max KF search cost.
 		final double maxCost = maxsearchRadius * maxsearchRadius;
@@ -124,30 +121,34 @@ public class KFsearch implements BlobTracker {
 		final double velocityProcessStd = maxsearchRadius / 2d;
 
 		double meanSpotRadius = 0d;
-		for (final PreRoiobject Blob : Secondorphan) {
+		for (final ThreeDRoiobject Blob : Secondorphan) {
 
-			meanSpotRadius += Blob.area;
+			
+			meanSpotRadius += Blob.volume;
 		}
 		meanSpotRadius /= Secondorphan.size();
 		final double positionMeasurementStd = meanSpotRadius / 1d;
 
-		final Map<CVMKalmanFilter, PreRoiobject> kalmanFiltersMap = new HashMap<CVMKalmanFilter, PreRoiobject>(
+		final Map<CVMKalmanFilter, ThreeDRoiobject> kalmanFiltersMap = new HashMap<CVMKalmanFilter, ThreeDRoiobject>(
 				Secondorphan.size());
 
 		// Loop from the second frame to the last frame and build
 		// KalmanFilterMap
 		Iterator<Map.Entry<String, Integer>> itSec = AccountedT.entrySet().iterator();
+		int percent = 0;
 		if (itSec.hasNext())
 			itSec.next();
 		while (itSec.hasNext()) {
-
+			percent++;
+			utility.ProgressBar.SetProgressBar(jpb, 100 * percent / (AccountedT.size() - 1),
+					"Kalman Filter Search for " + " T = " + uniqueID);
 			int currentT = itSec.next().getValue();
-			uniqueID = Integer.toString(centralZ) + Integer.toString(currentT);
+			uniqueID = currentT;
 
-			SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge> subgraph = new SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge>(
+			SimpleWeightedGraph<ThreeDRoiobject, DefaultWeightedEdge> subgraph = new SimpleWeightedGraph<ThreeDRoiobject, DefaultWeightedEdge>(
 					DefaultWeightedEdge.class);
 
-			ArrayList<PreRoiobject> measurements = Allblobs.get(uniqueID);
+			List<ThreeDRoiobject> measurements = generateSpotList(Allblobs, uniqueID);
 
 			// Make the preditiction map
 			final Map<ComparableRealPoint, CVMKalmanFilter> predictionMap = new HashMap<ComparableRealPoint, CVMKalmanFilter>(
@@ -157,6 +158,8 @@ public class KFsearch implements BlobTracker {
 				final double[] X = kf.predict();
 				final ComparableRealPoint point = new ComparableRealPoint(X);
 				predictionMap.put(point, kf);
+				
+				
 
 			}
 			final List<ComparableRealPoint> predictions = new ArrayList<ComparableRealPoint>(predictionMap.keySet());
@@ -173,27 +176,27 @@ public class KFsearch implements BlobTracker {
 			if (!predictions.isEmpty() && !measurements.isEmpty()) {
 				// Only link measurements to predictions if we have predictions.
 
-				final JaqamanLinkingCostMatrixCreator<ComparableRealPoint, PreRoiobject> crm = new JaqamanLinkingCostMatrixCreator<ComparableRealPoint, PreRoiobject>(
+				final JaqamanLinkingCostMatrixCreator<ComparableRealPoint, ThreeDRoiobject> crm = new JaqamanLinkingCostMatrixCreator<ComparableRealPoint, ThreeDRoiobject>(
 						predictions, measurements, DistanceBasedcost, maxCost, ALTERNATIVE_COST_FACTOR, PERCENTILE);
 
-				final JaqamanLinker<ComparableRealPoint, PreRoiobject> linker = new JaqamanLinker<ComparableRealPoint, PreRoiobject>(
+				final JaqamanLinker<ComparableRealPoint, ThreeDRoiobject> linker = new JaqamanLinker<ComparableRealPoint, ThreeDRoiobject>(
 						crm);
 				if (!linker.checkInput() || !linker.process()) {
 					errorMessage = BASE_ERROR_MSG + "Error linking candidates in frame " + currentT + ": "
 							+ linker.getErrorMessage();
 					return false;
 				}
-				final Map<ComparableRealPoint, PreRoiobject> agnts = linker.getResult();
+				final Map<ComparableRealPoint, ThreeDRoiobject> agnts = linker.getResult();
 				final Map<ComparableRealPoint, Double> costs = linker.getAssignmentCosts();
 
 				// Deal with found links.
-				Secondorphan = new HashSet<PreRoiobject>(measurements);
+				Secondorphan = new HashSet<ThreeDRoiobject>(measurements);
 				for (final ComparableRealPoint cm : agnts.keySet()) {
 					final CVMKalmanFilter kf = predictionMap.get(cm);
 
 					// Create links for found match.
-					final PreRoiobject source = kalmanFiltersMap.get(kf);
-					final PreRoiobject target = agnts.get(cm);
+					final ThreeDRoiobject source = kalmanFiltersMap.get(kf);
+					final ThreeDRoiobject target = agnts.get(cm);
 
 					graph.addVertex(source);
 					graph.addVertex(target);
@@ -227,22 +230,22 @@ public class KFsearch implements BlobTracker {
 
 				// Trying to link orphans with unlinked candidates.
 
-				final JaqamanLinkingCostMatrixCreator<PreRoiobject, PreRoiobject> ic = new JaqamanLinkingCostMatrixCreator<PreRoiobject, PreRoiobject>(
+				final JaqamanLinkingCostMatrixCreator<ThreeDRoiobject, ThreeDRoiobject> ic = new JaqamanLinkingCostMatrixCreator<ThreeDRoiobject, ThreeDRoiobject>(
 						Firstorphan, Secondorphan, UserchosenCostFunction, maxInitialCost, ALTERNATIVE_COST_FACTOR,
 						PERCENTILE);
-				final JaqamanLinker<PreRoiobject, PreRoiobject> newLinker = new JaqamanLinker<PreRoiobject, PreRoiobject>(
+				final JaqamanLinker<ThreeDRoiobject, ThreeDRoiobject> newLinker = new JaqamanLinker<ThreeDRoiobject, ThreeDRoiobject>(
 						ic);
 				if (!newLinker.checkInput() || !newLinker.process()) {
 					errorMessage = BASE_ERROR_MSG + "Error linking Blobs from frame " + (currentT - 1) + " to frame "
 							+ currentT + ": " + newLinker.getErrorMessage();
 					return false;
 				}
-				final Map<PreRoiobject, PreRoiobject> newAssignments = newLinker.getResult();
-				final Map<PreRoiobject, Double> assignmentCosts = newLinker.getAssignmentCosts();
+				final Map<ThreeDRoiobject, ThreeDRoiobject> newAssignments = newLinker.getResult();
+				final Map<ThreeDRoiobject, Double> assignmentCosts = newLinker.getAssignmentCosts();
 
 				// Build links and new KFs from these links.
-				for (final PreRoiobject source : newAssignments.keySet()) {
-					final PreRoiobject target = newAssignments.get(source);
+				for (final ThreeDRoiobject source : newAssignments.keySet()) {
+					final ThreeDRoiobject target = newAssignments.get(source);
 
 					// Remove from orphan collection.
 
@@ -321,28 +324,30 @@ public class KFsearch implements BlobTracker {
 			return hashCode() - o.hashCode();
 		}
 	}
-
-	public void reset() {
-
-		graph = new SimpleWeightedGraph<PreRoiobject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-		final Iterator<PreRoiobject> it = Allblobs.get(0).iterator();
-		while (it.hasNext()) {
-			graph.addVertex(it.next());
+	private static final List< ThreeDRoiobject > generateSpotList( final ThreeDRoiobjectCollection spots, final int frame )
+	{
+		final List< ThreeDRoiobject > list = new ArrayList< >( spots.getNThreeDRoiobjects( frame, true ) );
+		for ( final Iterator< ThreeDRoiobject > iterator = spots.iterator( frame, true ); iterator.hasNext(); )
+		{
+			list.add( iterator.next() );
 		}
+		return list;
 	}
+	
 
-	private static final double[] MeasureBlob(final PreRoiobject target) {
+
+	private static final double[] MeasureBlob(final ThreeDRoiobject target) {
 		final double[] location = new double[] { target.geometriccenter[0], target.geometriccenter[1],
 				target.geometriccenter[2] };
 		return location;
 	}
 
-	private static final double[] estimateInitialState(final PreRoiobject first, final PreRoiobject second) {
+	private static final double[] estimateInitialState(final ThreeDRoiobject first, final ThreeDRoiobject second) {
 		final double[] xp = new double[] { second.geometriccenter[0], second.geometriccenter[1],
 				second.geometriccenter[2], second.diffTo(first, 0), second.diffTo(first, 1), second.diffTo(first, 2) };
 		return xp;
 	}
-
+	
 	/**
 	 * 
 	 * Implementations of various cost functions, starting with the simplest one,
@@ -351,10 +356,10 @@ public class KFsearch implements BlobTracker {
 	 *
 	 * Cost function that returns the square distance between a KF state and a Blob.
 	 */
-	private static final CostFunction<ComparableRealPoint, PreRoiobject> DistanceBasedcost = new CostFunction<ComparableRealPoint, PreRoiobject>() {
+	private static final CostFunction<ComparableRealPoint, ThreeDRoiobject> DistanceBasedcost = new CostFunction<ComparableRealPoint, ThreeDRoiobject>() {
 
 		@Override
-		public double linkingCost(final ComparableRealPoint state, final PreRoiobject Blob) {
+		public double linkingCost(final ComparableRealPoint state, final ThreeDRoiobject Blob) {
 			final double dx = state.getDoublePosition(0) - Blob.geometriccenter[0];
 			final double dy = state.getDoublePosition(1) - Blob.geometriccenter[1];
 			final double dz = state.getDoublePosition(2) - Blob.geometriccenter[2];

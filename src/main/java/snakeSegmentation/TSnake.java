@@ -29,6 +29,10 @@ public class TSnake extends SwingWorker<Void, Void> {
 	@Override
 	protected Void doInBackground() throws Exception {
 
+		
+	
+		
+		
 		for (int t = parent.fourthDimensionsliderInit; t <= parent.fourthDimensionSize; ++t) {
 
 			parent.fourthDimension = t;
@@ -46,10 +50,10 @@ public class TSnake extends SwingWorker<Void, Void> {
 					parent.CurrentView.min(1), parent.CurrentView.max(0), parent.CurrentView.max(1) });
 			Interval interval = Intervals.expand(spaceinterval, 10);
 			parent.CurrentView = Views.interval(Views.extendBorder(parent.CurrentView), interval);
-
-			SnakeonT applysnake = new SnakeonT(parent, parent.CurrentView, currentRoi);
+			SnakeonView applysnake = new SnakeonView(parent, parent.CurrentView, currentRoi);
 			applysnake.process();
 			ArrayList<PreRoiobject> resultrois = applysnake.getResult();
+			currentRoi.clear();
 			parent.ZTRois.put(uniqueID, resultrois);
 
 			parent.updatePreview(ValueChange.SNAKE);
@@ -63,6 +67,7 @@ public class TSnake extends SwingWorker<Void, Void> {
 	@Override
 	protected void done() {
 		parent.snakeinprogress = false;
+		
 		try {
 			utility.ProgressBar.SetProgressBar(parent.jpb, "Done");
 			get();

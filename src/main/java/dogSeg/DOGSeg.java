@@ -30,7 +30,7 @@ public class DOGSeg extends SwingWorker<Void, Void> {
 
 	@Override
 	protected Void doInBackground() throws Exception {
-
+		if(!parent.snakeinprogress)
 		utility.ProgressBar.SetProgressBar(jpb, "Doing Difference of Gaussian Detection, Please Wait...");
 
 		final DogDetection.ExtremaType type;
@@ -53,7 +53,6 @@ public class DOGSeg extends SwingWorker<Void, Void> {
 	parent.overlay.clear();
 		
 		
-		utility.ProgressBar.SetProgressBar(jpb, "Done");
 
 		parent.Rois = utility.FinderUtils.getcurrentRois(parent.peaks, parent.sigma, parent.sigma2);
 		
@@ -61,7 +60,7 @@ public class DOGSeg extends SwingWorker<Void, Void> {
 		for (int index = 0; index < parent.peaks.size(); ++index) {
 
 			double[] center = new double[] { parent.peaks.get(index).getDoublePosition(0),
-					parent.peaks.get(index).getDoublePosition(1) };
+					parent.peaks.get(index).getDoublePosition(1), parent.thirdDimension };
 
 			Roi or = parent.Rois.get(index);
 
@@ -76,15 +75,15 @@ public class DOGSeg extends SwingWorker<Void, Void> {
 			final double intensity = Intensityandpixels.getA();
 			final double numberofpixels = Intensityandpixels.getB();
 			final double averageintensity = intensity / numberofpixels;
-			PreRoiobject currentobject = new PreRoiobject(currentroi, geocenter, numberofpixels, intensity, averageintensity, parent.thirdDimension, parent.fourthDimension);
+			PreRoiobject currentobject = new PreRoiobject(currentroi, new double [] {geocenter[0], geocenter[1], parent.thirdDimension}, numberofpixels, intensity, averageintensity, parent.thirdDimension, parent.fourthDimension);
 			parent.CurrentPreRoiobject.add(currentobject);
 		}
 	
 		parent.imp.setOverlay(parent.overlay);
 		parent.imp.updateAndDraw();
+		if(!parent.snakeinprogress)
 		utility.ProgressBar.SetProgressBar(jpb, "Done");
 		parent.updatePreview(ValueChange.SNAKE);
-
 		try {
 			get();
 		} catch (InterruptedException e) {
