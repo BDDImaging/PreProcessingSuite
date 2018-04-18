@@ -5,17 +5,16 @@ import java.awt.event.ActionListener;
 
 import javax.swing.SwingUtilities;
 
-import mser3D.MserAll;
-import snakeSegmentation.SingleSnake;
-import snakeSegmentation.ZSnake;
+import snake3D.SnakeAll;
 
-public class PREZMserListener implements ActionListener {
+public class PREApplySnake3DListener implements ActionListener {
 	
 	final InteractiveMethods parent;
 	
-	public PREZMserListener(final InteractiveMethods parent) {
+	public PREApplySnake3DListener(final InteractiveMethods parent) {
 		
 		this.parent = parent;
+		
 	}
 	
 	@Override
@@ -37,7 +36,7 @@ public class PREZMserListener implements ActionListener {
 
 	
 
-		MserAll dosnake = new MserAll(parent);
+		SnakeAll dosnake = new SnakeAll(parent);
 		dosnake.execute();
 
 	}

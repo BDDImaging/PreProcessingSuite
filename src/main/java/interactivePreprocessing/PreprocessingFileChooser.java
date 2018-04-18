@@ -1,7 +1,9 @@
-package userTESTING;
+package interactivePreprocessing;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Checkbox;
+import java.awt.CheckboxGroup;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -21,9 +23,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import ij.ImagePlus;
-import interactivePreprocessing.InteractiveMethods;
-import interactivePreprocessing.PreCurrentMovieListener;
-import interactivePreprocessing.PreUploadMovieListener;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
@@ -45,6 +44,9 @@ public class PreprocessingFileChooser extends JPanel {
 	public ImagePlus impA;
 	public JFileChooser chooserB;
 	public String choosertitleB;
+    public boolean onlySeg = true;
+	
+	public boolean TrackandSeg = false;  
 	  public JFrame Cardframe = new JFrame("Welcome to Computer Vision Segmentation Tools (Covisto)");
 	  public JPanel panelCont = new JPanel();
 	  public JPanel panelFirst = new JPanel();
@@ -55,14 +57,22 @@ public class PreprocessingFileChooser extends JPanel {
 	  public final GridBagLayout layout = new GridBagLayout();
 	  public final GridBagConstraints c = new GridBagConstraints();
 	  public Border selectfile = new CompoundBorder(new TitledBorder("Select file"), new EmptyBorder(c.insets));
-	
+	  
+	  public CheckboxGroup mode = new CheckboxGroup();
+	  
+	  final Checkbox SegMode = new Checkbox("Load Segmentation Tools only", mode, onlySeg);
+	  final Checkbox TrackMode = new Checkbox("Load Segmentation and Tracking Tools", mode, TrackandSeg);
+	  public JPanel ModePanel = new JPanel();
+	  
 	public PreprocessingFileChooser () {
 		
 		
-		
+		Border methodborder = new CompoundBorder(new TitledBorder("Choose run mode"),
+				new EmptyBorder(c.insets));
 
 		   panelFirst.setLayout(layout);
 		   Panelfile.setLayout(layout);
+		   ModePanel.setLayout(layout);
 			CardLayout cl = new CardLayout();
 			
 			panelCont.setLayout(cl);
@@ -71,6 +81,14 @@ public class PreprocessingFileChooser extends JPanel {
 			
 			JButton Current = new JButton("Use Current movie");
 			
+		    
+		    ModePanel.add(SegMode, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+					GridBagConstraints.HORIZONTAL, insets, 0, 0));
+		    ModePanel.add(TrackMode, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+					GridBagConstraints.HORIZONTAL, insets, 0, 0));
+		    panelFirst.add(ModePanel, new GridBagConstraints(0, 0, 3, 1, 0.0D, 0.0D, 17, 
+				      -1, new Insets(10, 10, 0, 10), 0, 0));
+		    ModePanel.setBorder(methodborder);
 			
 			 Panelfile.add( ImageType, new GridBagConstraints(0, 0, 1, 1, 0.0D, 0.0D, 17, 
 				      2, insets, 0, 1));
@@ -84,19 +102,18 @@ public class PreprocessingFileChooser extends JPanel {
 		    
 		    Panelfile.setBorder(selectfile);
 		 
-		    panelFirst.add(Panelfile, new GridBagConstraints(0, 0, 3, 1, 0.0D, 0.0D, 17, 
+		    panelFirst.add(Panelfile, new GridBagConstraints(0, 3, 3, 1, 0.0D, 0.0D, 17, 
 		      -1, new Insets(10, 10, 0, 10), 0, 0));
 		    
 		    
-		    
-
-		
 		
 	
 
 		Measureserial.addActionListener(new PreUploadMovieListener(this));
 		Current.addActionListener(new PreCurrentMovieListener(this));
 
+		SegMode.addItemListener(new PREDoSegmodeListener(this));
+		TrackMode.addItemListener(new PREDoTrackmodeListener(this));
 		
 		panelFirst.setVisible(true);
 		Cardframe.addWindowListener(new FrameListener(Cardframe));
@@ -129,7 +146,7 @@ public class PreprocessingFileChooser extends JPanel {
 	    
 		RandomAccessibleInterval<FloatType> image = ImageJFunctions.convertFloat(impA);
 		
-		new InteractiveMethods(image, chooserA.getSelectedFile()).run(null);
+		new InteractiveMethods(image, chooserA.getSelectedFile(), onlySeg, TrackandSeg).run(null);
 		close(parent);
 
 		
@@ -144,7 +161,7 @@ public class PreprocessingFileChooser extends JPanel {
 		RandomAccessibleInterval<FloatType> image = ImageJFunctions.convertFloat(impA);
 		
 		
-		new InteractiveMethods(image).run(null);
+		new InteractiveMethods(image, onlySeg, TrackandSeg).run(null);
 		close(parent);
 		if(impA!=null)
         impA.close();

@@ -38,17 +38,20 @@ public class ZMser extends SwingWorker<Void, Void> {
 	protected Void doInBackground() throws Exception {
 
 		ImagePlus Localimp = ImageJFunctions.show(parent.originalimg);
+	//	int count = 0;
+	//	int[] totalcount = new int[parent.thirdDimensionSize + 1];
+	//	int expectedMT = 61;
 		for (int z = parent.thirdDimensionsliderInit; z <= parent.thirdDimensionSize; ++z) {
 
 			parent.thirdDimension = z;
 
-			parent.CurrentView = utility.Slicer.getCurrentView(parent.originalimg, z, parent.thirdDimensionSize,
+			parent.CurrentView = utility.CovistoSlicer.getCurrentView(parent.originalimg, z, parent.thirdDimensionSize,
 					parent.fourthDimension, parent.fourthDimensionSize);
 			parent.updatePreview(ValueChange.THIRDDIM);
 
 			parent.prestack.addSlice(Localimp.getImageStack().getProcessor(z).convertToRGB());
 			parent.cp = (ColorProcessor) (parent.prestack.getProcessor(z).duplicate());
-			utility.ProgressBar.SetProgressBar(parent.jpb, "Computing Component Tree for MSER, Please Wait...");
+			utility.CovsitoProgressBar.CovistoSetProgressBar(parent.jpb, "Computing Component Tree for MSER, Please Wait...");
 
 			if (parent.darktobright)
 
@@ -62,6 +65,10 @@ public class ZMser extends SwingWorker<Void, Void> {
 			parent.overlay.clear();
 			parent.Rois = utility.FinderUtils.getcurrentRois(parent.newtree);
 
+		//	count += (expectedMT - parent.Rois.size());
+			
+		//	totalcount[z] = expectedMT - parent.Rois.size();
+			
 			parent.CurrentPreRoiobject = new ArrayList<PreRoiobject>();
 			ArrayList<double[]> centerRoi = utility.FinderUtils.getRoiMean(parent.newtree);
 
@@ -88,7 +95,16 @@ public class ZMser extends SwingWorker<Void, Void> {
 			parent.prestack.setPixels(parent.cp.getPixels(), z);
 			Localimp.hide();
 		}
-
+		
+	 //double meanfaliure = count /(parent.thirdDimensionSize );
+	 //double stdev = 0;
+	 //for (int z = parent.thirdDimensionsliderInit; z <= parent.thirdDimensionSize; ++z) {
+		 
+	 //	 stdev+= (totalcount[z] - meanfaliure) * (totalcount[z] - meanfaliure);
+	// }
+	 
+	 
+    //System.out.println("Count" + " " + count  + "STDEV: " + Math.sqrt(stdev/parent.thirdDimensionSize));
 		return null;
 
 	}
@@ -99,7 +115,7 @@ public class ZMser extends SwingWorker<Void, Void> {
 		new ImagePlus("Sim", parent.prestack).show();
 
 		try {
-			utility.ProgressBar.SetProgressBar(parent.jpb, "Done");
+			utility.CovsitoProgressBar.CovistoSetProgressBar(parent.jpb, "Done");
 			get();
 		} catch (ExecutionException | InterruptedException e) {
 			e.printStackTrace();
