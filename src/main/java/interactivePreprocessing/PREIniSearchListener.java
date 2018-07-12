@@ -7,6 +7,8 @@ import java.awt.event.AdjustmentListener;
 import javax.swing.JScrollBar;
 
 import interactivePreprocessing.InteractiveMethods.ValueChange;
+import kalmanGUI.CovistoKalmanPanel;
+import zGUI.CovistoZselectPanel;
 
 public class PREIniSearchListener implements AdjustmentListener {
 	
@@ -36,13 +38,14 @@ public class PREIniSearchListener implements AdjustmentListener {
 	
 	@Override
 	public void adjustmentValueChanged(final AdjustmentEvent event) {
-		    parent.initialSearchradius = utility.ScrollbarUtils.computeValueFromScrollbarPosition(event.getValue(), min, max, scrollbarSize);
+		CovistoKalmanPanel.initialSearchradius = utility.ScrollbarUtils.computeValueFromScrollbarPosition(event.getValue(), min, max, scrollbarSize);
 
 		
-			scrollbar.setValue(utility.ScrollbarUtils.computeScrollbarPositionFromValue(parent.initialSearchradius, min, max, scrollbarSize));
+			scrollbar.setValue(utility.ScrollbarUtils.computeScrollbarPositionFromValue(CovistoKalmanPanel.initialSearchradius, min, max, scrollbarSize));
 
-			label.setText(string +  " = "  + parent.nf.format(parent.initialSearchradius));
+			label.setText(string +  " = "  + parent.nf.format(CovistoKalmanPanel.initialSearchradius));
 
+			
 	
 	}
 	

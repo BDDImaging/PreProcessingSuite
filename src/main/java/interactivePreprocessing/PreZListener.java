@@ -11,6 +11,8 @@ import interactivePreprocessing.InteractiveMethods.ValueChange;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.logic.BitType;
+import watershedGUI.CovistoWatershedPanel;
+import zGUI.CovistoZselectPanel;
 
 
 public class PreZListener implements AdjustmentListener {
@@ -33,7 +35,6 @@ public class PreZListener implements AdjustmentListener {
 
 			this.deltaScrollbar = deltaScrollbar;
 			
-		//	deltaScrollbar.addMouseMotionListener(new PreNonStandardMouseListener(parent, ValueChange.THIRDDIMmouse));
 				deltaScrollbar.addMouseListener(new CovistoStandardMouseListener(parent, ValueChange.THIRDDIMmouse));
 			
 				
@@ -44,15 +45,19 @@ public class PreZListener implements AdjustmentListener {
 		@Override
 		public void adjustmentValueChanged(AdjustmentEvent e) {
 			
-			parent.thirdDimension = (int) Math.round(utility.CovistoSlicer.computeValueFromScrollbarPosition(e.getValue(), min, max, scrollbarSize));
+			CovistoZselectPanel.thirdDimension = (int) Math.round(utility.CovistoSlicer.computeValueFromScrollbarPosition(e.getValue(), min, max, scrollbarSize));
 			
 			deltaScrollbar
-			.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(parent.thirdDimension, min, max, scrollbarSize));
+			.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(CovistoZselectPanel.thirdDimension, min, max, scrollbarSize));
 
 
 
-			label.setText(string +  " = "  + parent.thirdDimension);
-			parent.inputFieldZ.setText(Integer.toString((int)parent.thirdDimension));
+			label.setText(string +  " = "  + CovistoZselectPanel.thirdDimension);
+			
+			
+			
+			
+			CovistoZselectPanel.inputFieldZ.setText(Integer.toString((int)CovistoZselectPanel.thirdDimension));
 			parent.panelFirst.validate();
 			parent.panelFirst.repaint();
 			

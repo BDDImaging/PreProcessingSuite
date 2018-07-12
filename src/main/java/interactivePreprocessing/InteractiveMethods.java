@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import snakeSegmentation.*;
 import threeDViewer.ThreeDRoiobjectDisplayer;
+import timeGUI.CovistoTimeselectPanel;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -57,11 +58,13 @@ import ij.gui.Roi;
 import ij.plugin.frame.RoiManager;
 import ij.process.ColorProcessor;
 import ij3d.Image3DUniverse;
+import kalmanGUI.CovistoKalmanPanel;
 import linkers.Model3D;
 import linkers.PRENNsearch;
 import mpicbg.imglib.util.Util;
 import mserGUI.CovistoMserPanel;
 import mserMethods.MSERSeg;
+import nearestNeighbourGUI.CovistoNearestNPanel;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.Point;
@@ -81,29 +84,24 @@ import net.imglib2.view.Views;
 import preProcessing.GetLocalmaxminMT;
 import preProcessing.GlobalThresholding;
 import preProcessing.Kernels;
+import snakeGUI.CovistoSnakePanel;
 import utility.PreRoiobject;
 import utility.ThreeDRoiobject;
 import visualization.CovistoModelView;
 import visualization.Draw3DLines;
 import visualization.DummyTrackColorGenerator;
 import visualization.SelectionModel;
+import watershedGUI.CovistoWatershedPanel;
+import zGUI.CovistoZselectPanel;
 
 public class InteractiveMethods {
 
 	public NumberFormat nf;
 	public RandomAccessibleInterval<FloatType> originalimg;
 	public int ndims;
-	public int fourthDimension;
-	public int thirdDimension;
-	public int thirdDimensionSize;
-	public int fourthDimensionSize;
-	public int thirdDimensionslider = 1;
-	public int thirdDimensionsliderInit = 1;
-	public int fourthDimensionslider = 1;
-	public int fourthDimensionsliderInit = 1;
+
 	public int Maxlabel;
 	public int thresholdsliderInit = 125;
-	public int thresholdsliderWaterInit = 125;
 
 	public ImagePlus imp;
 	public boolean showMSER = false;
@@ -120,80 +118,37 @@ public class InteractiveMethods {
 	public final int scrollbarSize = 1000;
 	public JProgressBar jpb;
 	public File inputfile;
-	public int alphaInit = 1;
-	public int betaInit = 0;
-
 	public boolean autothreshwater = false;
-
-	public int Unstability_ScoreInit = 1;
-	public float Unstability_Score = Unstability_ScoreInit;
-
-	public int minSizeInit = 50;
-	public int maxSizeInit = 500;
-
-	public int maxSearchInit = 100;
-	public int maxframegap = 10;
-	public int deltaInit = 10;
-	public float delta = deltaInit;
-
-	public float deltaMax = 255f;
-
-    public boolean snakeongoing = false;
+	public boolean snakeongoing = false;
 	public int Progressmin = 0;
 	public int Progressmax = 100;
 	public int max = Progressmax;
-
-	public FloatType minval = new FloatType(0);
-	public FloatType maxval = new FloatType(1);
-
 	public MserTree<UnsignedByteType> newtree;
-
-	public float thresholdMin = 0;
-	public float thresholdMax = 255f;
-	public int thresholdInit = 0;
-
-	public float thresholdMinWater = 1f;
-	public float thresholdMaxWater = 255f;
-	public int thresholdInitWater = 0;
 	public Roi nearestRoiCurr;
 	public int rowchoice;
 	public static int standardSensitivity = 4;
 	public int sensitivity = standardSensitivity;
 	public Color colorChange = Color.RED;
-	public float minDiversityMin = 0;
-	public float minDiversityMax = 1;
-	public int minDiversityInit = 1;
-	public float minDiversity = minDiversityInit;
+	
 	public MouseMotionListener ml;
 	public MouseListener mvl;
 	public int timeMin = 1;
-	public long minSize = 1;
-	public long maxSize = maxSizeInit;
-	public long minSizemin = 0;
-	public long minSizemax = 1000;
-	public long maxSizemin = 1;
-	public long maxSizemax = 10000;
-	public float deltaMin = 0;
+	
 
 	public boolean onlySeg = true;
-	
+
 	public boolean TrackandSeg = false;
-	public float Unstability_ScoreMin = 0f;
-	public float Unstability_ScoreMax = 1f;
+	
 	public int tablesize;
-	public float sigma2 = 1.1f;
-	public float threshold = 1f;
-	public float thresholdWater = 255f;
-	public boolean darktobright = false;
-	public boolean brighttodark = true;
+	
+
 	public ArrayList<Roi> Rois;
 	public ArrayList<PreRoiobject> CurrentPreRoiobject;
 	public ArrayList<Roi> NearestNeighbourRois;
 	public ArrayList<Roi> BiggerRois;
 	public JTable table;
 	public int row;
-	public int sigmaInit = 30;
-	public float sigma = sigmaInit;
+	
 	public CostFunction<ThreeDRoiobject, ThreeDRoiobject> UserchosenCostFunction;
 	public Color colorDrawMser = Color.green;
 	public Color colorDrawDog = Color.red;
@@ -202,10 +157,7 @@ public class InteractiveMethods {
 	public Color colorTrack = Color.GREEN;
 	public Overlay overlay;
 	public FinalInterval interval;
-	public boolean lookForMaxima = true;
-	public boolean lookForMinima = false;
-	public float sigmaMin = 1f;
-	public float sigmaMax = 100f;
+	
 	public RandomAccessibleInterval<BitType> bitimg;
 	public RandomAccessibleInterval<FloatType> bitimgFloat;
 	public RandomAccessibleInterval<IntType> intimg;
@@ -213,153 +165,33 @@ public class InteractiveMethods {
 	public ArrayList<PreRoiobject> ZTPreRoiobject;
 	public HashMap<String, ArrayList<PreRoiobject>> ZTRois;
 	public HashMap<Integer, ArrayList<ThreeDRoiobject>> threeDTRois;
-	public float initialSearchradius = 10;
-	public float maxSearchradius = 15;
-	public float maxSearchradiusS = 15;
-	public int missedframes = 20;
-	public int initialSearchradiusInit = (int) initialSearchradius;
-	public float initialSearchradiusMin = 1;
-	public float initialSearchradiusMax = 1000;
-	public float alphaMin = 0;
-	public float alphaMax = 1;
-	public float betaMin = 0;
-	public float betaMax = 1;
+
 	public ArrayList<RefinedPeak<Point>> peaks;
-	public int maxSearchradiusInit = (int) maxSearchradius;
-	public float maxSearchradiusMin = 1;
-	public float maxSearchradiusMax = 1000;
-	public float maxSearchradiusMinS = 1;
-	public float maxSearchradiusMaxS = 1000;
+
 	public String uniqueID, ZID, TID;
-	public float alpha = 0.5f;
-	public float beta = 0.5f;
+
 	public Image3DUniverse universe;
 	public boolean apply3D = false;
 	public Model3D model = new Model3D();
-	public SelectionModel selmode = new SelectionModel(model); 
-	
-	public int snakeiterations = 200;
-	public int displaysnake = snakeiterations / 2;
-	public int Gradthresh = 1;
-	public int DistMax = 100;
-	public double Displacement_min = 0.5;
-	public double Displacement_max = 5.0;
-	public double Threshold_dist_positive = 10;
-	public double Threshold_dist_negative = 10;
-	public double Inv_alpha_min = 0.2;
-	public double Inv_alpha_max = 10.0;
+	public SelectionModel selmode = new SelectionModel(model);
+
 	public ImageStack prestack;
 	public boolean SegMode;
-	 
+
 	public ColorProcessor cp = null;
-	public double Mul_factor = 0.99;
-	// maximum displacement
-	public double force = 10;
-	// regulari1ation factors, min and max
-	public double reg = 5;
-	public double regmin, regmax;
-     
+
 	public boolean AutoSnake = true;
 	public boolean advancedSnake = false;
 	public SnakeConfigDriver configDriver;
 
 	public static enum ValueChange {
 
-		ALL, MSER, DOG, SNAKE, WATER, DIST, DISTWATER, GAUSS, THRESHOLD, SIGMA, FOURTHDIMmouse, THIRDDIMmouse, THIRDDIM,
-		MINDIVERSITY, DELTA, MINSIZE, MAXSIZE, MAXVAR, DARKTOBRIGHT, PREROI, NearestN, Kalman, ALPHA, BETA, ThreeDTrackDisplay, ThreeDTrackDisplayALL;
+		ALL, MSER, DOG, SNAKE, WATER, DIST, DISTWATER, GAUSS, THRESHOLD, SIGMA, FOURTHDIMmouse, THIRDDIMmouse,
+		THIRDDIM, MINDIVERSITY, DELTA, MINSIZE, MAXSIZE, MAXVAR, DARKTOBRIGHT, PREROI, NearestN, Kalman, ALPHA, BETA, ThreeDTrackDisplay, ThreeDTrackDisplayALL;
 
 	}
 
-	public void setTime(final int value) {
-
-		fourthDimensionslider = value;
-		fourthDimensionsliderInit = value;
-		fourthDimension = value;
-	}
-
-	public int getTimeMax() {
-
-		return thirdDimensionSize;
-	}
-
-	public void setZ(final int value) {
-		thirdDimensionslider = value;
-		thirdDimensionsliderInit = value;
-		thirdDimension = value;
-	}
-
-	public void setInitialminDiversity(final float value) {
-		minDiversity = value;
-		minDiversityInit = computeScrollbarPositionFromValue(minDiversity, minDiversityMin, minDiversityMax,
-				scrollbarSize);
-	}
-
-	public double getInitialminDiversity(final float value) {
-
-		return minDiversity;
-
-	}
-
-	public void setInitialminSize(final int value) {
-		minSize = value;
-		minSizeInit = computeScrollbarPositionFromValue(minSize, minSizemin, minSizemax, scrollbarSize);
-	}
-
-	public double getInitialminSize(final int value) {
-
-		return minSize;
-
-	}
-
-	public void setInitialmaxSize(final int value) {
-		maxSize = value;
-		maxSizeInit = computeScrollbarPositionFromValue(maxSize, maxSizemin, maxSizemax, scrollbarSize);
-	}
-
-	public double getInitialmaxSize(final int value) {
-
-		return maxSize;
-
-	}
-
-	public double getInitialSigma() {
-		return sigma;
-	}
-
-	public void setInitialSigma(final float value) {
-		sigma = value;
-		sigmaInit = computeScrollbarPositionFromValue(sigma, sigmaMin, sigmaMax, scrollbarSize);
-	}
-
-	public double getInitialThreshold() {
-		return threshold;
-	}
-
-	public void setInitialThreshold(final float value) {
-		threshold = value;
-		thresholdInit = computeScrollbarPositionFromValue(threshold, thresholdMin, thresholdMax, scrollbarSize);
-	}
-
-	public double getInitialThresholdWater() {
-		return thresholdInitWater;
-	}
-
-	public void setInitialThresholdWater(final float value) {
-		thresholdWater = value;
-		thresholdInitWater = computeScrollbarPositionFromValue(thresholdWater, thresholdMinWater, thresholdMaxWater,
-				scrollbarSize);
-	}
-
-	public void setInitialDelta(final float value) {
-		delta = value;
-		deltaInit = computeScrollbarPositionFromValue(delta, deltaMin, deltaMax, scrollbarSize);
-	}
-
-	public double getInitialDelta(final float value) {
-
-		return delta;
-
-	}
+	
 
 	public InteractiveMethods() {
 
@@ -368,7 +200,8 @@ public class InteractiveMethods {
 
 	}
 
-	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, final boolean SegMode, final boolean TrackandSeg) {
+	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, final boolean SegMode,
+			final boolean TrackandSeg) {
 
 		this.originalimg = originalimg;
 		this.SegMode = SegMode;
@@ -378,7 +211,8 @@ public class InteractiveMethods {
 		this.ndims = originalimg.numDimensions();
 	}
 
-	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, File file, final boolean SegMode, final boolean TrackandSeg) {
+	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, File file, final boolean SegMode,
+			final boolean TrackandSeg) {
 
 		this.originalimg = originalimg;
 		this.inputfile = file;
@@ -389,52 +223,6 @@ public class InteractiveMethods {
 		this.ndims = originalimg.numDimensions();
 	}
 
-	public void setInitialsearchradius(final float value) {
-		initialSearchradius = value;
-		initialSearchradiusInit = computeScrollbarPositionFromValue(initialSearchradius, initialSearchradiusMin,
-				initialSearchradiusMax, scrollbarSize);
-	}
-
-	public void setInitialmaxsearchradius(final float value) {
-		maxSearchradius = value;
-		maxSearchradiusInit = computeScrollbarPositionFromValue(maxSearchradius, maxSearchradiusMin, maxSearchradiusMax,
-				scrollbarSize);
-	}
-
-	public double getInitialsearchradius(final float value) {
-
-		return initialSearchradius;
-
-	}
-
-	public void setInitialUnstability_Score(final float value) {
-		Unstability_Score = value;
-		Unstability_ScoreInit = computeScrollbarPositionFromValue(Unstability_Score, Unstability_ScoreMin,
-				Unstability_ScoreMax, scrollbarSize);
-	}
-
-	public void setInitialAlpha(final float value) {
-		alpha = value;
-		alphaInit = computeScrollbarPositionFromValue(alpha, alphaMin, alphaMax, scrollbarSize);
-	}
-
-	public double getInitialAlpha(final float value) {
-
-		return alpha;
-
-	}
-
-	public void setInitialBeta(final float value) {
-		beta = value;
-		betaInit = computeScrollbarPositionFromValue(beta, betaMin, betaMax, scrollbarSize);
-	}
-
-	public double getInitialBeta(final float value) {
-
-		return beta;
-
-	}
-
 	public void run(String arg0) {
 		FloatType minval = new FloatType(0);
 		FloatType maxval = new FloatType(255);
@@ -443,7 +231,7 @@ public class InteractiveMethods {
 				java.awt.image.ColorModel.getRGBdefault());
 		Accountedframes = new HashMap<String, Integer>();
 		AccountedZ = new HashMap<String, Integer>();
-		universe = new Image3DUniverse((int)originalimg.dimension(0), (int)originalimg.dimension(1));
+		universe = new Image3DUniverse((int) originalimg.dimension(0), (int) originalimg.dimension(1));
 		jpb = new JProgressBar();
 		overlay = new Overlay();
 		interval = new FinalInterval(originalimg.dimension(0), originalimg.dimension(1));
@@ -454,60 +242,42 @@ public class InteractiveMethods {
 		configDriver = new SnakeConfigDriver();
 		ZTPreRoiobject = new ArrayList<PreRoiobject>();
 		Timetracks = new HashMap<Integer, ArrayList<ThreeDRoiobject>>();
-		setInitialUnstability_Score(Unstability_ScoreInit);
-		setInitialDelta(deltaInit);
-		setInitialAlpha(alphaInit);
-		setInitialBeta(betaInit);
-		setInitialminDiversity(minDiversityInit);
-		setInitialmaxSize(maxSizeInit);
-		setInitialminSize(minSizeInit);
-		setInitialsearchradius(initialSearchradiusInit);
-		setInitialmaxsearchradius(maxSearchradius);
-		
-		
-		
-		
-		
-		regmin = reg / 2.0;
-		regmax = reg;
+
 		if (ndims < 3) {
 
-			thirdDimensionSize = 0;
-			fourthDimensionSize = 0;
+			CovistoZselectPanel.thirdDimensionSize = 0;
+			CovistoTimeselectPanel.fourthDimensionSize = 0;
 		}
 
 		if (ndims == 3) {
 
-			fourthDimension = 0;
-			fourthDimensionsliderInit = 0;
-			thirdDimension = 1;
-			fourthDimensionSize = 0;
-
-			thirdDimensionSize = (int) originalimg.dimension(2);
+			CovistoTimeselectPanel.fourthDimension = 0;
+			CovistoTimeselectPanel.fourthDimensionsliderInit = 0;
+			CovistoZselectPanel.thirdDimension = 1;
+			CovistoTimeselectPanel.fourthDimensionSize = 0;
+			CovistoZselectPanel.thirdDimensionSize = (int) originalimg.dimension(2);
 
 		}
 
 		if (ndims == 4) {
 
-			fourthDimension = 1;
-			thirdDimension = 1;
-
-			thirdDimensionSize = (int) originalimg.dimension(2);
-			fourthDimensionSize = (int) originalimg.dimension(3);
+			CovistoTimeselectPanel.fourthDimension = 1;
+			CovistoZselectPanel.thirdDimension = 1;
+			CovistoZselectPanel.thirdDimensionSize = (int) originalimg.dimension(2);
+			CovistoTimeselectPanel.fourthDimensionSize = (int) originalimg.dimension(3);
 
 			prestack = new ImageStack((int) originalimg.dimension(0), (int) originalimg.dimension(1),
 					java.awt.image.ColorModel.getRGBdefault());
 		}
 
-		setTime(fourthDimension);
-		setZ(thirdDimension);
-		CurrentView = utility.CovistoSlicer.getCurrentView(originalimg, fourthDimension, thirdDimensionSize, thirdDimension,
-				fourthDimensionSize);
+		CurrentView = utility.CovistoSlicer.getCurrentView(originalimg, CovistoTimeselectPanel.fourthDimension,
+				CovistoZselectPanel.thirdDimensionSize, CovistoZselectPanel.thirdDimension,
+				CovistoTimeselectPanel.fourthDimensionSize);
 
 		imp = ImageJFunctions.show(CurrentView);
-		System.out.println(originalimg.dimension(0) + " " + originalimg.dimension(1) + " " + originalimg.dimension(2)
-				+ " " + originalimg.dimension(3) + " " + ndims);
-		imp.setTitle("Active image" + " " + "time point : " + fourthDimension + " " + " Z: " + thirdDimension);
+	
+		imp.setTitle("Active image" + " " + "time point : " + CovistoTimeselectPanel.fourthDimension + " " + " Z: "
+				+ CovistoZselectPanel.thirdDimension);
 		roimanager = RoiManager.getInstance();
 
 		if (roimanager == null) {
@@ -528,10 +298,11 @@ public class InteractiveMethods {
 	public void updatePreview(final ValueChange change) {
 
 		overlay = imp.getOverlay();
-		int localthirddim = thirdDimension, localfourthdim = fourthDimension;
-		uniqueID = Integer.toString(thirdDimension) + Integer.toString(fourthDimension);
-		ZID = Integer.toString(thirdDimension);
-		TID = Integer.toString(fourthDimension);
+		int localthirddim = CovistoZselectPanel.thirdDimension, localfourthdim = CovistoTimeselectPanel.fourthDimension;
+		uniqueID = Integer.toString(CovistoZselectPanel.thirdDimension)
+				+ Integer.toString(CovistoTimeselectPanel.fourthDimension);
+		ZID = Integer.toString(CovistoZselectPanel.thirdDimension);
+		TID = Integer.toString(CovistoTimeselectPanel.fourthDimension);
 		if (overlay == null) {
 
 			overlay = new Overlay();
@@ -545,47 +316,40 @@ public class InteractiveMethods {
 		}
 
 		if (change == ValueChange.ThreeDTrackDisplay) {
-		
-			
-			Integer ID = (Integer) table.getValueAt(rowchoice, 0);
-			
-			
-			ThreeDRoiobjectDisplayer displaymodel = new ThreeDRoiobjectDisplayer(model, selmode, universe); 
 
-			
-			
+			Integer ID = (Integer) table.getValueAt(rowchoice, 0);
+
+			ThreeDRoiobjectDisplayer displaymodel = new ThreeDRoiobjectDisplayer(model, selmode, universe);
+
 			displaymodel.setDisplaySettings(CovistoModelView.KEY_TRACK_COLORING, new DummyTrackColorGenerator(), ID);
-			
-            for(int trackID: model.getTrackModel().trackIDs(true)) {
-			
-			if (ID == trackID)
-				model.setTrackVisibility(trackID, true);
-			else
-				model.setTrackVisibility(trackID, false);
-			
-		}
+
+			for (int trackID : model.getTrackModel().trackIDs(true)) {
+
+				if (ID == trackID)
+					model.setTrackVisibility(trackID, true);
+				else
+					model.setTrackVisibility(trackID, false);
+
+			}
 			displaymodel.render(ID);
 			displaymodel.refresh();
-		
-			
-			
+
 		}
-		
+
 		if (change == ValueChange.SNAKE) {
 
 			overlay.clear();
-			Accountedframes.put(TID, fourthDimension);
+			Accountedframes.put(TID, CovistoTimeselectPanel.fourthDimension);
 
-			AccountedZ.put(ZID, thirdDimension);
-			
+			AccountedZ.put(ZID, CovistoZselectPanel.thirdDimension);
 
-			
 			for (Map.Entry<String, ArrayList<PreRoiobject>> entry : ZTRois.entrySet()) {
 
 				ArrayList<PreRoiobject> current = entry.getValue();
 				for (PreRoiobject currentroi : current) {
 
-					if (currentroi.fourthDimension == fourthDimension && currentroi.thirdDimension == thirdDimension) {
+					if (currentroi.fourthDimension == CovistoTimeselectPanel.fourthDimension
+							&& currentroi.thirdDimension == CovistoZselectPanel.thirdDimension) {
 
 						currentroi.rois.setStrokeColor(colorSnake);
 						overlay.add(currentroi.rois);
@@ -597,18 +361,20 @@ public class InteractiveMethods {
 			}
 			imp.setOverlay(overlay);
 			imp.updateAndDraw();
-			zText.setText("Current Z = " + localthirddim);
-			zgenText.setText("Current Z / T = " + localthirddim);
-			zslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localthirddim, thirdDimensionsliderInit,
-					thirdDimensionSize, scrollbarSize));
-			zslider.repaint();
-			zslider.validate();
+			CovistoZselectPanel.zText.setText("Current Z = " + localthirddim);
+			CovistoZselectPanel.zgenText.setText("Current Z / T = " + localthirddim);
+			CovistoZselectPanel.zslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localthirddim,
+					CovistoZselectPanel.thirdDimensionsliderInit, CovistoZselectPanel.thirdDimensionSize,
+					scrollbarSize));
+			CovistoZselectPanel.zslider.repaint();
+			CovistoZselectPanel.zslider.validate();
 
-			timeText.setText("Current T = " + localfourthdim);
-			timeslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localfourthdim,
-					fourthDimensionsliderInit, fourthDimensionSize, scrollbarSize));
-			timeslider.repaint();
-			timeslider.validate();
+			CovistoTimeselectPanel.timeText.setText("Current T = " + localfourthdim);
+			CovistoTimeselectPanel.timeslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(
+					localfourthdim, CovistoTimeselectPanel.fourthDimensionsliderInit,
+					CovistoTimeselectPanel.fourthDimensionSize, scrollbarSize));
+			CovistoTimeselectPanel.timeslider.repaint();
+			CovistoTimeselectPanel.timeslider.validate();
 
 		}
 
@@ -623,13 +389,14 @@ public class InteractiveMethods {
 				final double numberofpixels = Intensityandpixels.getB();
 				final double averageintensity = intensity / numberofpixels;
 				PreRoiobject currentobject = new PreRoiobject(currentroi,
-						new double[] { geocenter[0], geocenter[1], thirdDimension }, numberofpixels, intensity,
-						averageintensity, thirdDimension, fourthDimension);
+						new double[] { geocenter[0], geocenter[1], CovistoZselectPanel.thirdDimension }, numberofpixels,
+						intensity, averageintensity, CovistoZselectPanel.thirdDimension,
+						CovistoTimeselectPanel.fourthDimension);
 				ZTPreRoiobject.add(currentobject);
 			}
-			Accountedframes.put(TID, fourthDimension);
+			Accountedframes.put(TID, CovistoTimeselectPanel.fourthDimension);
 
-			AccountedZ.put(ZID, thirdDimension);
+			AccountedZ.put(ZID, CovistoZselectPanel.thirdDimension);
 			ZTRois.put(uniqueID, ZTPreRoiobject);
 
 			if (overlay != null)
@@ -640,7 +407,8 @@ public class InteractiveMethods {
 				ArrayList<PreRoiobject> current = entry.getValue();
 				for (PreRoiobject currentroi : current) {
 
-					if (currentroi.fourthDimension == fourthDimension && currentroi.thirdDimension == thirdDimension) {
+					if (currentroi.fourthDimension == CovistoTimeselectPanel.fourthDimension
+							&& currentroi.thirdDimension == CovistoZselectPanel.thirdDimension) {
 
 						currentroi.rois.setStrokeColor(colorConfirm);
 						overlay.add(currentroi.rois);
@@ -672,13 +440,13 @@ public class InteractiveMethods {
 
 			}
 
-			imp.setTitle("Active image" + " " + "time point : " + fourthDimension + " " + " Z: " + thirdDimension);
+			imp.setTitle("Active image" + " " + "time point : " + CovistoTimeselectPanel.fourthDimension + " " + " Z: "
+					+ CovistoZselectPanel.thirdDimension);
 
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 
-			
 		}
-		
+
 		if (change == ValueChange.FOURTHDIMmouse || change == ValueChange.THIRDDIMmouse) {
 
 			if (imp == null) {
@@ -698,37 +466,38 @@ public class InteractiveMethods {
 
 			}
 
-			imp.setTitle("Active image" + " " + "time point : " + fourthDimension + " " + " Z: " + thirdDimension);
-			
+			imp.setTitle("Active image" + " " + "time point : " + CovistoTimeselectPanel.fourthDimension + " " + " Z: "
+					+ CovistoZselectPanel.thirdDimension);
+
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 
-			
-			if ( showMSER ) {
+			if (showMSER) {
 
 				MSERSeg computeMSER = new MSERSeg(this, jpb);
 				computeMSER.execute();
 
 			}
 
-			if ( showDOG ) {
+			if (showDOG) {
 
 				DOGSeg computeDOG = new DOGSeg(this, jpb);
 				computeDOG.execute();
 			}
-			
-			
-			zText.setText("Current Z = " + localthirddim);
-			zgenText.setText("Current Z / T = " + localthirddim);
-			zslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localthirddim, thirdDimensionsliderInit,
-					thirdDimensionSize, scrollbarSize));
-			zslider.repaint();
-			zslider.validate();
 
-			timeText.setText("Current T = " + localfourthdim);
-			timeslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localfourthdim,
-					fourthDimensionsliderInit, fourthDimensionSize, scrollbarSize));
-			timeslider.repaint();
-			timeslider.validate();
+			CovistoZselectPanel.zText.setText("Current Z = " + localthirddim);
+			CovistoZselectPanel.zgenText.setText("Current Z / T = " + localthirddim);
+			CovistoZselectPanel.zslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localthirddim,
+					CovistoZselectPanel.thirdDimensionsliderInit, CovistoZselectPanel.thirdDimensionSize,
+					scrollbarSize));
+			CovistoZselectPanel.zslider.repaint();
+			CovistoZselectPanel.zslider.validate();
+
+			CovistoTimeselectPanel.timeText.setText("Current T = " + localfourthdim);
+			CovistoTimeselectPanel.timeslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(
+					localfourthdim, CovistoTimeselectPanel.fourthDimensionsliderInit,
+					CovistoTimeselectPanel.fourthDimensionSize, CovistoTimeselectPanel.scrollbarSize));
+			CovistoTimeselectPanel.timeslider.repaint();
+			CovistoTimeselectPanel.timeslider.validate();
 		}
 
 		if (change == ValueChange.MSER) {
@@ -749,7 +518,8 @@ public class InteractiveMethods {
 
 			}
 
-			imp.setTitle("Active image" + " " + "time point : " + fourthDimension + " " + " Z: " + thirdDimension);
+			imp.setTitle("Active image" + " " + "time point : " + CovistoTimeselectPanel.fourthDimension + " " + " Z: "
+					+ CovistoZselectPanel.thirdDimension);
 
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 
@@ -766,19 +536,17 @@ public class InteractiveMethods {
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 			bitimg = new ArrayImgFactory<BitType>().create(newimg, new BitType());
 			bitimgFloat = new ArrayImgFactory<FloatType>().create(newimg, new FloatType());
-			GetLocalmaxminMT.ThresholdingMTBit(CurrentView, bitimg, thresholdWater);
+			GetLocalmaxminMT.ThresholdingMTBit(CurrentView, bitimg, CovistoWatershedPanel.thresholdWater);
 			if (displayBinaryimg && !apply3D)
 				ImageJFunctions.show(bitimg);
 			DistWatershed<FloatType> WaterafterDisttransform = new DistWatershed<FloatType>(this, CurrentView, bitimg,
 					jpb, false);
 			WaterafterDisttransform.execute();
-			if(displayWatershedimg && !apply3D)
+			if (displayWatershedimg && !apply3D)
 				ImageJFunctions.show(WaterafterDisttransform.getResult());
-			
-			if(displayDistTransimg && !apply3D)
+
+			if (displayDistTransimg && !apply3D)
 				ImageJFunctions.show(WaterafterDisttransform.getDistanceTransformedimg());
-		
-			
 
 		}
 
@@ -801,7 +569,8 @@ public class InteractiveMethods {
 
 			}
 
-			imp.setTitle("Active image" + " " + "time point : " + fourthDimension + " " + " Z: " + thirdDimension);
+			imp.setTitle("Active image" + " " + "time point : " + CovistoTimeselectPanel.fourthDimension + " " + " Z: "
+					+ CovistoZselectPanel.thirdDimension);
 
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 
@@ -826,51 +595,12 @@ public class InteractiveMethods {
 	public JPanel DetectionPanel = new JPanel();
 
 	public JPanel NearestNPanel = new JPanel();
-	public  JPanel KalmanPanel = new JPanel();
+	public JPanel KalmanPanel = new JPanel();
 
-	final String timestring = "Current T";
-	final String zstring = "Current Z";
-	final String zgenstring = "Current Z / T";
-
-	
-
-	
-	public final String waterstring = "Threshold for Watershedding";
 	final String maxSearchstring = "Maximum search radius";
-	final String maxSearchstringS = "Maximum search radius";
-	final String initialSearchstring = "Initial search radius";
-
-	final String alphastring = "Weightage for distance based cost";
-	final String betastring = "Weightage for pixel ratio based cost";
-
-	public Label timeText = new Label("Current T = " + 1, Label.CENTER);
-	public Label zText = new Label("Current Z = " + 1, Label.CENTER);
-	public Label zgenText = new Label("Current Z / T = " + 1, Label.CENTER);
-
-
-	Label maxSearchText = new Label(maxSearchstring + " = " + maxSearchInit, Label.CENTER);
-	Label maxSearchTextS = new Label(maxSearchstring + " = " + maxSearchInit, Label.CENTER);
-	Label iniSearchText = new Label(initialSearchstring + " = " + initialSearchradiusInit, Label.CENTER);
-	Label alphaText = new Label(alphastring + " = " + alphaInit, Label.CENTER);
-	Label betaText = new Label(betastring + " = " + betaInit, Label.CENTER);
-
-
-
-
-	final Checkbox displayWater = new Checkbox("Display Watershed image", true);
-
-	final Checkbox displayBinary = new Checkbox("Display Binary image");
-
-	final Checkbox displayDist = new Checkbox("Display DTimage");
-
-	final Checkbox autothreshold = new Checkbox("Auto Thresholding");
-
-	final Checkbox advanced = new Checkbox("Display advanced Snake parameters");
 
 	public JButton Roibutton = new JButton("Confirm current roi selection");
 
-	public JButton Water3D = new JButton("Watershed in 3D/4D");
-	public JButton AllSnake = new JButton("Snake in 3D/4D"); 
 	public CheckboxGroup detection = new CheckboxGroup();
 	final Checkbox Watershed = new Checkbox("Do watershedding", detection, showWatershed);
 	final Checkbox DOG = new Checkbox("Do DoG detection", detection, showDOG);
@@ -880,93 +610,22 @@ public class InteractiveMethods {
 	public final GridBagLayout layout = new GridBagLayout();
 	public final GridBagConstraints c = new GridBagConstraints();
 
-	public JScrollBar timeslider = new JScrollBar(Scrollbar.HORIZONTAL, fourthDimensionsliderInit, 10, 0,
-			scrollbarSize + 10);
-	public JScrollBar zslider = new JScrollBar(Scrollbar.HORIZONTAL, thirdDimensionsliderInit, 10, 0,
-			10 + scrollbarSize);
-
-	public JScrollBar sigmaslider = CovistoDogPanel.sigmaslider;
-	public JScrollBar thresholdslider = CovistoDogPanel.thresholdslider;
-	public JScrollBar thresholdWaterslider = new JScrollBar(Scrollbar.HORIZONTAL, thresholdsliderWaterInit, 10, 0,
-			10 + scrollbarSize);
-
-	
-	final JScrollBar maxSearchS = new JScrollBar(Scrollbar.HORIZONTAL, maxSearchInit, 10, 0, 10 + scrollbarSize);
-	final JScrollBar maxSearchSS = new JScrollBar(Scrollbar.HORIZONTAL, maxSearchInit, 10, 0, 10 + scrollbarSize);
-	final JScrollBar initialSearchS = new JScrollBar(Scrollbar.HORIZONTAL, initialSearchradiusInit, 10, 0,
-			10 + scrollbarSize);
-	final JScrollBar alphaS = new JScrollBar(Scrollbar.HORIZONTAL, alphaInit, 10, 0, 10 + scrollbarSize);
-	final JScrollBar betaS = new JScrollBar(Scrollbar.HORIZONTAL, betaInit, 10, 0, 10 + scrollbarSize);
-
-	public Label sigmaText = CovistoDogPanel.sigmaText;
-	public Label thresholdText = CovistoDogPanel.thresholdText;
-	public Label watertext = new Label(waterstring + " = " + thresholdInitWater, Label.CENTER);
-
 	public TextField inputField = new TextField();
-	public TextField inputFieldT, inputtrackField;
-	public TextField inputFieldZ;
+	public TextField inputtrackField;
+
 	public int SizeXbig = 400;
 	public int SizeXsmall = 200;
 	public int SizeX = 400;
 	public int SizeY = 200;
 	public int SizeYsmall = 200;
 	public int SizeYbig = 500;
-	public Label Snakelabel, gradientlabel, distlabel, lostlabel;
-	public TextField Snakeiter, gradientthresh, maxdist, lostframe;
 	public JScrollPane scrollPane;
 	public JPanel PanelSelectFile = new JPanel();
 	public Border selectfile = new CompoundBorder(new TitledBorder("Select Track"), new EmptyBorder(c.insets));
 	public JPanel controlnextthird = new JPanel();
 	public JPanel controlprevthird = new JPanel();
+
 	public void Card() {
-
-		Snakelabel = new Label("Enter number of max snake iterations");
-		gradientlabel = new Label("Enter gradient threshold");
-		distlabel = new Label("Enter max distance to search for edges");
-		lostlabel = new Label("Allow link loosing for #frames");
-
-		Snakeiter = new TextField(1);
-		gradientthresh = new TextField(1);
-		maxdist = new TextField(1);
-		lostframe = new TextField(1);
-
-		Snakeiter.setText(Integer.toString(snakeiterations));
-		gradientthresh.setText(Integer.toString(Gradthresh));
-		maxdist.setText(Integer.toString(DistMax));
-		lostframe.setText(Integer.toString(maxframegap));
-
-		alphaS.setValue(
-				utility.ScrollbarUtils.computeScrollbarPositionFromValue(alphaInit, alphaMin, alphaMax, scrollbarSize));
-		betaS.setValue(
-				utility.ScrollbarUtils.computeScrollbarPositionFromValue(betaInit, betaMin, betaMax, scrollbarSize));
-
-	
-
-
-	
-
-		thresholdWaterslider.setValue(utility.ScrollbarUtils.computeScrollbarPositionFromValue(thresholdsliderWaterInit,
-				thresholdMinWater, thresholdMaxWater, scrollbarSize));
-
-	
-		thresholdWater = utility.ScrollbarUtils.computeValueFromScrollbarPosition(thresholdWaterslider.getValue(),
-				thresholdMinWater, thresholdMaxWater, scrollbarSize);
-		maxSearchradius = utility.ScrollbarUtils.computeValueFromScrollbarPosition(maxSearchS.getValue(),
-				maxSearchradiusMin, maxSearchradiusMax, scrollbarSize);
-		initialSearchradius = utility.ScrollbarUtils.computeValueFromScrollbarPosition(initialSearchS.getValue(),
-				initialSearchradiusMin, initialSearchradiusMax, scrollbarSize);
-		alpha = utility.ScrollbarUtils.computeValueFromScrollbarPosition(alphaS.getValue(), alphaMin, alphaMax,
-				scrollbarSize);
-		beta = utility.ScrollbarUtils.computeValueFromScrollbarPosition(betaS.getValue(), betaMin, betaMax,
-				scrollbarSize);
-
-		
-		
-		watertext = new Label(waterstring + " = " + thresholdWater, Label.CENTER);
-		maxSearchText = new Label(maxSearchstring + " = " + maxSearchradius, Label.CENTER);
-		iniSearchText = new Label(initialSearchstring + " = " + initialSearchradius, Label.CENTER);
-		alphaText = new Label(alphastring + " = " + alpha, Label.CENTER);
-		betaText = new Label(betastring + " = " + beta, Label.CENTER);
 
 		CardLayout cl = new CardLayout();
 
@@ -978,44 +637,16 @@ public class InteractiveMethods {
 		panelCont.add(panelSecond, "2");
 
 		panelCont.add(panelThird, "3");
-		
-		
+
 		panelFirst.setLayout(layout);
 		panelSecond.setLayout(layout);
 		panelThird.setLayout(layout);
-		Timeselect.setLayout(layout);
-
-		Zselect.setLayout(layout);
-		
 		DetectionPanel.setLayout(layout);
-		SnakePanel.setLayout(layout);
-		WaterPanel.setLayout(layout);
 		RoiPanel.setLayout(layout);
-		NearestNPanel.setLayout(layout);
-		KalmanPanel.setLayout(layout);
-
-		//
-		inputFieldZ = new TextField();
-		inputFieldZ = new TextField(5);
-		inputFieldZ.setText(Integer.toString(thirdDimension));
 
 		inputField.setColumns(10);
 
-		inputFieldT = new TextField();
-		inputFieldT = new TextField(5);
-		inputFieldT.setText(Integer.toString(fourthDimension));
-
-		Border timeborder = new CompoundBorder(new TitledBorder("Select time"), new EmptyBorder(c.insets));
-		Border zborder = new CompoundBorder(new TitledBorder("Select Z"), new EmptyBorder(c.insets));
-		
-		Border waterborder = new CompoundBorder(new TitledBorder("Watershed detection"), new EmptyBorder(c.insets));
-		Border snakeborder = new CompoundBorder(new TitledBorder("Active Contour refinement"),
-				new EmptyBorder(c.insets));
 		Border methodborder = new CompoundBorder(new TitledBorder("Choose a segmentation algorithm"),
-				new EmptyBorder(c.insets));
-		Border NNborder = new CompoundBorder(new TitledBorder("NearestNeighbour Search in Z"),
-				new EmptyBorder(c.insets));
-		Border Kalmanborder = new CompoundBorder(new TitledBorder("Kalman Filter Search in T"),
 				new EmptyBorder(c.insets));
 
 		c.anchor = GridBagConstraints.BOTH;
@@ -1027,43 +658,18 @@ public class InteractiveMethods {
 		c.gridx = 0;
 
 		// Put time slider
+		Timeselect = CovistoTimeselectPanel.TimeselectPanel(ndims);
 
-		Timeselect.add(timeText, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
-		Timeselect.add(timeslider, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
-		Timeselect.add(inputFieldT, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
-		Timeselect.setBorder(timeborder);
 		panelFirst.add(Timeselect, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
 		// Put z slider
-		if (ndims > 3)
-			Zselect.add(zText, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-					GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		else
-			Zselect.add(zgenText, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-					GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		Zselect.add(zslider, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 
-		Zselect.add(inputFieldZ, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
+		Zselect = CovistoZselectPanel.ZselectPanel(ndims);
 
-		Zselect.setBorder(zborder);
 		panelFirst.add(Zselect, new GridBagConstraints(3, 0, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 
-		if (ndims < 4) {
-
-			timeslider.setEnabled(false);
-			inputFieldT.setEnabled(false);
-		}
-
+		// Choice of segmentation algorithm panel
 		DetectionPanel.add(Watershed, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 		DetectionPanel.add(DOG, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
@@ -1075,48 +681,30 @@ public class InteractiveMethods {
 		panelFirst.add(DetectionPanel, new GridBagConstraints(0, 1, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 
-		WaterPanel.add(watertext, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
-		WaterPanel.add(thresholdWaterslider, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-
-		WaterPanel.add(displayWater, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		WaterPanel.add(displayBinary, new GridBagConstraints(1, 2, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		WaterPanel.add(displayDist, new GridBagConstraints(0, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		WaterPanel.add(autothreshold, new GridBagConstraints(1, 3, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		WaterPanel.add(Water3D, new GridBagConstraints(1, 4, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		WaterPanel.setBorder(waterborder);
-
+		// Watershed panel
+		WaterPanel = CovistoWatershedPanel.WaterPanel();
 		panelFirst.add(WaterPanel, new GridBagConstraints(3, 1, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.RELATIVE, insets, 0, 0));
 
-
+		// Difference of Gaussian detection panel
 		DogPanel = CovistoDogPanel.DogPanel();
 		panelFirst.add(DogPanel, new GridBagConstraints(0, 3, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 
+		// Mser detection panel
 		MserPanel = CovistoMserPanel.MserPanel();
-		
 		panelFirst.add(MserPanel, new GridBagConstraints(3, 3, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.RELATIVE, new Insets(10, 10, 0, 10), 0, 0));
 
-		final JButton Singlesnake = new JButton("Apply snakes to CurrentView");
 		final JButton Zsnakes = new JButton("Apply snakes in Z");
 		final JButton Tsnakes = new JButton("Apply snakes in T");
 		final JButton Allsnakes = new JButton("Apply snakes in Z & T");
 
 		final JButton SinglethreeD = new JButton("Track in Z for currrent T");
-		final JButton AllthreeD = new JButton("Track in Z");
-		final JButton Timetrack = new JButton("Link 3D objects in T");
+
 		JPanel controlprev = new JPanel();
 		JPanel controlnext = new JPanel();
-		
+
 		controlprev.setLayout(layout);
 		controlnext.setLayout(layout);
 		controlnextthird.setLayout(layout);
@@ -1155,178 +743,130 @@ public class InteractiveMethods {
 				cl.previous(panelCont);
 			}
 		}));
-		
-		SnakePanel.add(Snakelabel, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		SnakePanel.add(Snakeiter, new GridBagConstraints(0, 1, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
 
-		SnakePanel.add(gradientlabel, new GridBagConstraints(0, 2, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		SnakePanel.add(gradientthresh, new GridBagConstraints(0, 3, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		SnakePanel.add(distlabel, new GridBagConstraints(3, 0, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		SnakePanel.add(maxdist, new GridBagConstraints(3, 1, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		SnakePanel.add(Singlesnake, new GridBagConstraints(0, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		if (originalimg.numDimensions() > 2)
-			SnakePanel.add(AllSnake, new GridBagConstraints(5, 2, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-					GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		/*
-		if (originalimg.numDimensions() > 3) {
-			SnakePanel.add(Tsnakes, new GridBagConstraints(5, 3, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-					GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-			SnakePanel.add(Allsnakes, new GridBagConstraints(5, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-					GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		}
-
-        */
-		SnakePanel.add(advanced, new GridBagConstraints(5, 5, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		
-		
-		SnakePanel.setBorder(snakeborder);
+		// Active contour refinement panel
+		SnakePanel = CovistoSnakePanel.SnakePanel(originalimg.numDimensions());
 		panelSecond.add(SnakePanel, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
 				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
 
-		if(!SegMode) {
-		NearestNPanel.add(maxSearchText, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		NearestNPanel.add(maxSearchS, new GridBagConstraints(0, 1, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
+		// Tracking panel
+		if (!SegMode) {
 
-		//NearestNPanel.add(SinglethreeD, new GridBagConstraints(3, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-	//			GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		NearestNPanel.add(AllthreeD, new GridBagConstraints(3, 1, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
+			NearestNPanel = CovistoNearestNPanel.NearestNPanel();
 
-		NearestNPanel.setBorder(NNborder);
-	//	panelSecond.add(NearestNPanel, new GridBagConstraints(1, 1, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-	//			GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
+			KalmanPanel = CovistoKalmanPanel.KalmanPanel();
 
-		KalmanPanel.add(iniSearchText, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(initialSearchS, new GridBagConstraints(0, 1, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		KalmanPanel.add(alphaText, new GridBagConstraints(0, 2, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(alphaS, new GridBagConstraints(0, 3, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		KalmanPanel.add(betaText, new GridBagConstraints(0, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(betaS, new GridBagConstraints(0, 5, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-
-		KalmanPanel.add(lostlabel, new GridBagConstraints(5, 0, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(lostframe, new GridBagConstraints(5, 1, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(maxSearchTextS, new GridBagConstraints(5, 2, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(maxSearchSS, new GridBagConstraints(5, 3, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.add(Timetrack, new GridBagConstraints(5, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		KalmanPanel.setBorder(Kalmanborder);
-		panelThird.add(KalmanPanel, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
+			panelThird.add(KalmanPanel, new GridBagConstraints(0, 0, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
+					GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
+			CovistoNearestNPanel.AllthreeD.addActionListener(new PREAllZTrackListener(this));
+			CovistoKalmanPanel.Timetrack.addActionListener(new PRE3DTListener(this));
+			CovistoKalmanPanel.lostframe.addTextListener(new PRELostFrameListener(this));
+			CovistoKalmanPanel.alphaS.addAdjustmentListener(new PREAlphaListener(this, CovistoKalmanPanel.alphaText,
+					CovistoKalmanPanel.alphastring, CovistoKalmanPanel.alphaMin, CovistoKalmanPanel.alphaMax,
+					CovistoKalmanPanel.scrollbarSize, CovistoKalmanPanel.alphaS));
+			CovistoKalmanPanel.betaS.addAdjustmentListener(new PREBetaListener(this, CovistoKalmanPanel.betaText,
+					CovistoKalmanPanel.betastring, CovistoKalmanPanel.betaMin, CovistoKalmanPanel.betaMax,
+					CovistoKalmanPanel.scrollbarSize, CovistoKalmanPanel.betaS));
+			CovistoNearestNPanel.maxSearchNearest.addAdjustmentListener(new PREMaxSearchListener(this,
+					CovistoNearestNPanel.maxSearchTextNearest, CovistoNearestNPanel.maxSearchstringNearest,
+					CovistoNearestNPanel.maxSearchradiusMinNearest, CovistoNearestNPanel.maxSearchradiusMaxNearest,
+					CovistoNearestNPanel.scrollbarSize, CovistoNearestNPanel.maxSearchNearest));
+			CovistoKalmanPanel.maxSearchKalman.addAdjustmentListener(new PREMaxSearchTListener(this,
+					CovistoKalmanPanel.maxSearchTextKalman, CovistoKalmanPanel.maxSearchstringKalman,
+					CovistoKalmanPanel.maxSearchradiusMin, CovistoKalmanPanel.maxSearchradiusMax,
+					CovistoKalmanPanel.scrollbarSize, CovistoKalmanPanel.maxSearchSS));
+			CovistoKalmanPanel.initialSearchS.addAdjustmentListener(new PREIniSearchListener(this,
+					CovistoKalmanPanel.iniSearchText, CovistoKalmanPanel.initialSearchstring,
+					CovistoKalmanPanel.initialSearchradiusMin, CovistoKalmanPanel.initialSearchradiusMax,
+					CovistoKalmanPanel.scrollbarSize, CovistoKalmanPanel.initialSearchS));
 		}
-	
-
-		
 
 		Watershed.addItemListener(new DoWatershedListener(this));
 		DOG.addItemListener(new DoDOGListener(this));
 		MSER.addItemListener(new DoMSERListener(this));
-		autothreshold.addItemListener(new PREauto(this));
-
-		Water3D.addActionListener(new PREApplyWater3DListener(this));
-		lostframe.addTextListener(new PRELostFrameListener(this));
+		CovistoWatershedPanel.autothreshold.addItemListener(new PREauto(this));
+		CovistoWatershedPanel.dodist.addItemListener(new PREdist(this));
+		CovistoWatershedPanel.Water3D.addActionListener(new PREApplyWater3DListener(this));
+		CovistoWatershedPanel.tryWater.addActionListener(new PREApplyWaterCurrentListener(this));
 		CovistoDogPanel.findminima.addItemListener(new FindMinimaListener(this));
 		CovistoDogPanel.findmaxima.addItemListener(new FindMaximaListener(this));
 		CovistoMserPanel.findminimaMser.addItemListener(new FindMinimaMserListener(this));
 		CovistoMserPanel.findmaximaMser.addItemListener(new FindMaximaMserListener(this));
 
-		displayBinary.addItemListener(new PREShowBinary(this));
-		displayWater.addItemListener(new PREShowWatershed(this));
-		displayDist.addItemListener(new PREShowDist(this));
+		CovistoWatershedPanel.displayBinary.addItemListener(new PREShowBinary(this));
+		CovistoWatershedPanel.displayWater.addItemListener(new PREShowWatershed(this));
+		CovistoWatershedPanel.displayDist.addItemListener(new PREShowDist(this));
 		SinglethreeD.addActionListener(new PRESingleZTrackListener(this));
-		AllthreeD.addActionListener(new PREAllZTrackListener(this));
-		Timetrack.addActionListener(new PRE3DTListener(this));
-		Singlesnake.addActionListener(new PRESinglesnakeListener(this));
- 		Zsnakes.addActionListener(new PREZSnakeListener(this));
+
+		CovistoSnakePanel.Singlesnake.addActionListener(new PRESinglesnakeListener(this));
+		Zsnakes.addActionListener(new PREZSnakeListener(this));
 		Tsnakes.addActionListener(new PRETSnakeListener(this));
 		Allsnakes.addActionListener(new PREZTSnakeListener(this));
 		CovistoDogPanel.AllDog.addActionListener(new PREApplyDog3DListener(this));
 		CovistoMserPanel.AllMser.addActionListener(new PREZMserListener(this));
-		AllSnake.addActionListener(new PREApplySnake3DListener(this));
-		advanced.addItemListener(new AdvancedSnakeListener(this));
-		Snakeiter.addTextListener(new IterationListener(this));
-		gradientthresh.addTextListener(new GradientListener(this));
-		maxdist.addTextListener(new MaxdistListener(this));
+		CovistoSnakePanel.AllSnake.addActionListener(new PREApplySnake3DListener(this));
+		CovistoSnakePanel.advanced.addItemListener(new AdvancedSnakeListener(this));
+		CovistoSnakePanel.Snakeiter.addTextListener(new IterationListener(this));
+		CovistoSnakePanel.gradientthresh.addTextListener(new GradientListener(this));
+		CovistoSnakePanel.maxdist.addTextListener(new MaxdistListener(this));
+
+		CovistoWatershedPanel.thresholdWaterslider.addAdjustmentListener(
+				new PreWaterListener(this, CovistoWatershedPanel.watertext, CovistoWatershedPanel.waterstring,
+						CovistoWatershedPanel.thresholdMinWater, CovistoWatershedPanel.thresholdMaxWater, scrollbarSize,
+						CovistoWatershedPanel.thresholdWaterslider));
 		
-		thresholdWaterslider.addAdjustmentListener(new PreWaterListener(this, watertext, waterstring, thresholdMinWater,
-				thresholdMaxWater, scrollbarSize, thresholdWaterslider));
-		CovistoDogPanel.sigmaslider.addAdjustmentListener(
-				new PreSigmaListener(this, CovistoDogPanel.sigmaText, CovistoDogPanel.sigmastring, CovistoDogPanel.sigmaMin, CovistoDogPanel.sigmaMax, CovistoDogPanel.scrollbarSize, CovistoDogPanel.sigmaslider));
-		alphaS.addAdjustmentListener(
-				new PREAlphaListener(this, alphaText, alphastring, alphaMin, alphaMax, scrollbarSize, alphaS));
-		betaS.addAdjustmentListener(
-				new PREBetaListener(this, betaText, betastring, betaMin, betaMax, scrollbarSize, betaS));
+		
+		CovistoDogPanel.sigmaslider.addAdjustmentListener(new PreSigmaListener(this, CovistoDogPanel.sigmaText,
+				CovistoDogPanel.sigmastring, CovistoDogPanel.sigmaMin, CovistoDogPanel.sigmaMax,
+				CovistoDogPanel.scrollbarSize, CovistoDogPanel.sigmaslider));
 
-		CovistoMserPanel.deltaS.addAdjustmentListener(
-				new PREDeltaListener(this, CovistoMserPanel.deltaText, CovistoMserPanel.deltastring, CovistoMserPanel.deltaMin, CovistoMserPanel.deltaMax, CovistoMserPanel.scrollbarSize, CovistoMserPanel.deltaS));
+		CovistoMserPanel.deltaS.addAdjustmentListener(new PREDeltaListener(this, CovistoMserPanel.deltaText,
+				CovistoMserPanel.deltastring, CovistoMserPanel.deltaMin, CovistoMserPanel.deltaMax,
+				CovistoMserPanel.scrollbarSize, CovistoMserPanel.deltaS));
 
-		CovistoMserPanel.Unstability_ScoreS.addAdjustmentListener(
-				new PREUnstability_ScoreListener(this, CovistoMserPanel.Unstability_ScoreText, CovistoMserPanel.Unstability_Scorestring,
-						CovistoMserPanel.Unstability_ScoreMin, CovistoMserPanel.Unstability_ScoreMax, CovistoMserPanel.scrollbarSize, CovistoMserPanel.Unstability_ScoreS));
+		CovistoMserPanel.Unstability_ScoreS.addAdjustmentListener(new PREUnstability_ScoreListener(this,
+				CovistoMserPanel.Unstability_ScoreText, CovistoMserPanel.Unstability_Scorestring,
+				CovistoMserPanel.Unstability_ScoreMin, CovistoMserPanel.Unstability_ScoreMax,
+				CovistoMserPanel.scrollbarSize, CovistoMserPanel.Unstability_ScoreS));
 
-		CovistoMserPanel.minDiversityS.addAdjustmentListener(new PREMinDiversityListener(this, CovistoMserPanel.minDivText, CovistoMserPanel.minDivstring, CovistoMserPanel.minDiversityMin,
+		CovistoMserPanel.minDiversityS.addAdjustmentListener(new PREMinDiversityListener(this,
+				CovistoMserPanel.minDivText, CovistoMserPanel.minDivstring, CovistoMserPanel.minDiversityMin,
 				CovistoMserPanel.minDiversityMax, CovistoMserPanel.scrollbarSize, CovistoMserPanel.minDiversityS));
 
-		CovistoMserPanel.minSizeS.addAdjustmentListener(new PREMinSizeListener(this, CovistoMserPanel.minSizeText, CovistoMserPanel.minSizestring, CovistoMserPanel.minSizemin, CovistoMserPanel.minSizemax,
+		CovistoMserPanel.minSizeS.addAdjustmentListener(new PREMinSizeListener(this, CovistoMserPanel.minSizeText,
+				CovistoMserPanel.minSizestring, CovistoMserPanel.minSizemin, CovistoMserPanel.minSizemax,
 				CovistoMserPanel.scrollbarSize, CovistoMserPanel.minSizeS));
 
-		CovistoMserPanel.maxSizeS.addAdjustmentListener(new PREMaxSizeListener(this, CovistoMserPanel.maxSizeText, CovistoMserPanel.maxSizestring, CovistoMserPanel.maxSizemin, CovistoMserPanel.maxSizemax,
+		CovistoMserPanel.maxSizeS.addAdjustmentListener(new PREMaxSizeListener(this, CovistoMserPanel.maxSizeText,
+				CovistoMserPanel.maxSizestring, CovistoMserPanel.maxSizemin, CovistoMserPanel.maxSizemax,
 				CovistoMserPanel.scrollbarSize, CovistoMserPanel.maxSizeS));
 
-		CovistoDogPanel.thresholdslider.addAdjustmentListener(new PreThresholdListener(this, CovistoDogPanel.thresholdText,  CovistoDogPanel.thresholdstring,
-				 CovistoDogPanel.thresholdMin,  CovistoDogPanel.thresholdMax, CovistoDogPanel.scrollbarSize, CovistoDogPanel.thresholdslider));
+		CovistoDogPanel.thresholdslider.addAdjustmentListener(new PreThresholdListener(this,
+				CovistoDogPanel.thresholdText, CovistoDogPanel.thresholdstring, CovistoDogPanel.thresholdMin,
+				CovistoDogPanel.thresholdMax, CovistoDogPanel.scrollbarSize, CovistoDogPanel.thresholdslider));
 
-		timeslider.addAdjustmentListener(new PreTimeListener(this, timeText, timestring, fourthDimensionsliderInit,
-				fourthDimensionSize, scrollbarSize, timeslider));
-
-		maxSearchS.addAdjustmentListener(new PREMaxSearchListener(this, maxSearchText, maxSearchstring,
-				maxSearchradiusMin, maxSearchradiusMax, scrollbarSize, maxSearchS));
-		maxSearchSS.addAdjustmentListener(new PREMaxSearchTListener(this, maxSearchTextS, maxSearchstringS,
-				maxSearchradiusMinS, maxSearchradiusMaxS, scrollbarSize, maxSearchSS));
-		initialSearchS.addAdjustmentListener(new PREIniSearchListener(this, iniSearchText, initialSearchstring,
-				initialSearchradiusMin, initialSearchradiusMax, scrollbarSize, initialSearchS));
+		CovistoTimeselectPanel.timeslider.addAdjustmentListener(
+				new PreTimeListener(this, CovistoTimeselectPanel.timeText, CovistoTimeselectPanel.timestring,
+						CovistoTimeselectPanel.fourthDimensionsliderInit, CovistoTimeselectPanel.fourthDimensionSize,
+						CovistoTimeselectPanel.scrollbarSize, CovistoTimeselectPanel.timeslider));
 
 		if (ndims > 3)
-			zslider.addAdjustmentListener(new PreZListener(this, zText, zstring, thirdDimensionsliderInit,
-					thirdDimensionSize, scrollbarSize, zslider));
+			CovistoZselectPanel.zslider.addAdjustmentListener(new PreZListener(this, CovistoZselectPanel.zText,
+					CovistoZselectPanel.zstring, CovistoZselectPanel.thirdDimensionsliderInit,
+					CovistoZselectPanel.thirdDimensionSize, scrollbarSize, CovistoZselectPanel.zslider));
 		else
-			zslider.addAdjustmentListener(new PreZListener(this, zgenText, zgenstring, thirdDimensionsliderInit,
-					thirdDimensionSize, scrollbarSize, zslider));
+			CovistoZselectPanel.zslider.addAdjustmentListener(new PreZListener(this, CovistoZselectPanel.zgenText,
+					CovistoZselectPanel.zgenstring, CovistoZselectPanel.thirdDimensionsliderInit,
+					CovistoZselectPanel.thirdDimensionSize, scrollbarSize, CovistoZselectPanel.zslider));
 
-		inputFieldZ.addTextListener(new PreZlocListener(this, false));
-		inputFieldT.addTextListener(new PreTlocListener(this, false));
+		CovistoZselectPanel.inputFieldZ.addTextListener(new PreZlocListener(this, false));
+		CovistoTimeselectPanel.inputFieldT.addTextListener(new PreTlocListener(this, false));
 
 		panelSecond.add(controlprev, new GridBagConstraints(0, 4, 3, 1, 0.0, 0.0, GridBagConstraints.WEST,
 				GridBagConstraints.RELATIVE, new Insets(10, 10, 0, 10), 0, 0));
-		if(!SegMode) {
-		panelSecond.add(controlnextthird, new GridBagConstraints(2, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
-				GridBagConstraints.RELATIVE, new Insets(10, 10, 0, 10), 0, 0));
+		if (!SegMode) {
+			panelSecond.add(controlnextthird, new GridBagConstraints(2, 4, 3, 1, 0.0, 0.0, GridBagConstraints.EAST,
+					GridBagConstraints.RELATIVE, new Insets(10, 10, 0, 10), 0, 0));
 		}
 		panelSecond.setPreferredSize(SnakePanel.getPreferredSize());
 		controlnextthird.setEnabled(false);
@@ -1336,7 +876,7 @@ public class InteractiveMethods {
 				GridBagConstraints.HORIZONTAL, insets, 0, 0));
 		panelThird.add(controlprevthird, new GridBagConstraints(0, 6, 3, 1, 0.0, 0.0, GridBagConstraints.ABOVE_BASELINE,
 				GridBagConstraints.HORIZONTAL, new Insets(10, 10, 0, 10), 0, 0));
-		
+
 		Cardframe.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		cl.show(panelCont, "1");
 
@@ -1345,26 +885,6 @@ public class InteractiveMethods {
 		panelFirst.setVisible(true);
 		Cardframe.pack();
 		Cardframe.setVisible(true);
-	}
-
-	public float computeValueFromScrollbarPosition(final int scrollbarPosition, final float min, final float max,
-			final int scrollbarSize) {
-		return min + (scrollbarPosition / (float) scrollbarSize) * (max - min);
-	}
-
-	protected static float computeIntValueFromScrollbarPosition(final int scrollbarPosition, final float min,
-			final float max, final int scrollbarSize) {
-		return min + (scrollbarPosition / (max)) * (max - min);
-	}
-
-	public int computeScrollbarPositionFromValue(final float sigma, final float min, final float max,
-			final int scrollbarSize) {
-		return Util.round(((sigma - min) / (max - min)) * scrollbarSize);
-	}
-
-	public int computeIntScrollbarPositionFromValue(final float thirdDimensionslider, final float min, final float max,
-			final int scrollbarSize) {
-		return Util.round(((thirdDimensionslider - min) / (max - min)) * max);
 	}
 
 	public static void main(String[] args) {

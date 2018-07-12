@@ -14,10 +14,12 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import interactivePreprocessing.InteractiveMethods;
 import interactivePreprocessing.InteractiveMethods.ValueChange;
 import linkers.PRENNsearch;
+import nearestNeighbourGUI.CovistoNearestNPanel;
 import net.imglib2.Interval;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
+import timeGUI.CovistoTimeselectPanel;
 import utility.PreRoiobject;
 import utility.ThreeDRoiobject;
 
@@ -39,7 +41,7 @@ public class SingleAllTrack extends SwingWorker<Void, Void> {
 			
 			int time = entrytime.getValue();
 		
-		PRENNsearch Zsearch = new PRENNsearch(parent.ZTRois, parent.maxSearchradius, time, parent.AccountedZ, parent.jpb);
+		PRENNsearch Zsearch = new PRENNsearch(parent.ZTRois, CovistoNearestNPanel.maxSearchradiusNearest, time, parent.AccountedZ, parent.jpb);
 		Zsearch.process();
 		SimpleWeightedGraph< PreRoiobject, DefaultWeightedEdge > Zgraph = Zsearch.getResult();
 		HashMap<Integer, ArrayList<PreRoiobject> > currentRoiobject = utility.AnalzeZTrack.get3Dobjects(Zgraph);
@@ -50,7 +52,7 @@ public class SingleAllTrack extends SwingWorker<Void, Void> {
 			
 			double[] geometriccenter = ThreeDRoiobject.getCentroid3D( currentobject);
 			final Pair<Double, Integer> Intensityandpixels = ThreeDRoiobject.getIntensity3D(currentobject);
-			ThreeDRoiobject current3D = new ThreeDRoiobject(currentobject, geometriccenter, Intensityandpixels.getB(), Intensityandpixels.getA(), Intensityandpixels.getA() / Intensityandpixels.getB(), parent.fourthDimension);
+			ThreeDRoiobject current3D = new ThreeDRoiobject(currentobject, geometriccenter, Intensityandpixels.getB(), Intensityandpixels.getA(), Intensityandpixels.getA() / Intensityandpixels.getB(), CovistoTimeselectPanel.fourthDimension);
 			AllRois.add(current3D);
 			
 		}

@@ -6,11 +6,13 @@ import java.awt.event.AdjustmentListener;
 
 import javax.swing.JScrollBar;
 
+import dogGUI.CovistoDogPanel;
 import ij.IJ;
 import interactivePreprocessing.InteractiveMethods.ValueChange;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.logic.BitType;
+import timeGUI.CovistoTimeselectPanel;
 
 
 
@@ -33,7 +35,6 @@ public class PreTimeListener implements AdjustmentListener {
 		this.scrollbarSize = scrollbarSize;
 
 		this.deltaScrollbar = deltaScrollbar;
-		//deltaScrollbar.addMouseMotionListener(new PreNonStandardMouseListener(parent, ValueChange.FOURTHDIMmouse));
 			deltaScrollbar.addMouseListener(new CovistoStandardMouseListener(parent, ValueChange.FOURTHDIMmouse));
 	
 			deltaScrollbar.setBlockIncrement(utility.CovistoSlicer.computeScrollbarPositionFromValue(2, min, max, scrollbarSize));
@@ -43,15 +44,16 @@ public class PreTimeListener implements AdjustmentListener {
 	@Override
 	public void adjustmentValueChanged(AdjustmentEvent e) {
 		
-		parent.fourthDimension = (int) Math.round(utility.CovistoSlicer.computeValueFromScrollbarPosition(e.getValue(), min, max, scrollbarSize));
+	
+		CovistoTimeselectPanel.fourthDimension = (int) Math.round(utility.CovistoSlicer.computeValueFromScrollbarPosition(e.getValue(), min, max, scrollbarSize));
 
 
 		deltaScrollbar
-		.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(parent.fourthDimension, min, max, scrollbarSize));
+		.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(CovistoTimeselectPanel.fourthDimension, min, max, scrollbarSize));
 		
-		label.setText(string +  " = "  + parent.fourthDimension);
+		label.setText(string +  " = "  + CovistoTimeselectPanel.fourthDimension);
 
-		parent.inputFieldT.setText(Integer.toString((int)parent.fourthDimension));
+	
 		parent.panelFirst.validate();
 		parent.panelFirst.repaint();
 		ShowView show = new ShowView(parent);
