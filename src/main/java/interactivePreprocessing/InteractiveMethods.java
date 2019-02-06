@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import snakeSegmentation.*;
 import threeDViewer.ThreeDRoiobjectDisplayer;
 import timeGUI.CovistoTimeselectPanel;
@@ -173,9 +175,9 @@ public class InteractiveMethods {
 	public RandomAccessibleInterval<IntType> intimg;
 	public HashMap<Integer, ArrayList<ThreeDRoiobject>> Timetracks;
 	public ArrayList<PreRoiobject> ZTPreRoiobject;
-	public HashMap<String, ArrayList<PreRoiobject>> ZTRois;
+	public ConcurrentHashMap<String, ArrayList<PreRoiobject>> ZTRois;
 	public HashMap<Integer, ArrayList<ThreeDRoiobject>> threeDTRois;
-
+    public ConcurrentHashMap<Integer, ArrayList<double[]>> AllEvents;
 	public ArrayList<RefinedPeak<Point>> peaks;
 
 	public String uniqueID, ZID, TID;
@@ -189,7 +191,7 @@ public class InteractiveMethods {
 	public boolean SegMode;
 
 	public ColorProcessor cp = null;
-
+    public final String userfile;
 	public boolean AutoSnake = true;
 	public boolean advancedSnake = false;
 	public SnakeConfigDriver configDriver;
@@ -207,22 +209,14 @@ public class InteractiveMethods {
 
 		nf = NumberFormat.getInstance(Locale.ENGLISH);
 		nf.setMaximumFractionDigits(3);
-
+		nf.setGroupingUsed(false);
+        this.userfile = null;
 	}
 
-	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, final boolean SegMode,
-			final boolean TrackandSeg) {
 
-		this.originalimg = originalimg;
-		this.SegMode = SegMode;
-		this.TrackandSeg = TrackandSeg;
-		nf = NumberFormat.getInstance(Locale.ENGLISH);
-		nf.setMaximumFractionDigits(3);
-		this.ndims = originalimg.numDimensions();
-	}
 
 	public InteractiveMethods(final RandomAccessibleInterval<FloatType> originalimg, File file, final boolean SegMode,
-			final boolean TrackandSeg) {
+			final boolean TrackandSeg, String userfile) {
 
 		this.originalimg = originalimg;
 		this.inputfile = file;
@@ -230,6 +224,8 @@ public class InteractiveMethods {
 		this.TrackandSeg = TrackandSeg;
 		nf = NumberFormat.getInstance(Locale.ENGLISH);
 		nf.setMaximumFractionDigits(3);
+		nf.setGroupingUsed(false);
+		this.userfile = userfile;
 		this.ndims = originalimg.numDimensions();
 	}
 
@@ -241,14 +237,14 @@ public class InteractiveMethods {
 				java.awt.image.ColorModel.getRGBdefault());
 		Accountedframes = new HashMap<String, Integer>();
 		AccountedZ = new HashMap<String, Integer>();
-		
+		AllEvents = new ConcurrentHashMap<Integer, ArrayList<double[]>>();
 		AfterRemovedRois = new ArrayList<Roi>(); 
-		universe = new Image3DUniverse((int) originalimg.dimension(0), (int) originalimg.dimension(1));
+		//universe = new Image3DUniverse((int) originalimg.dimension(0), (int) originalimg.dimension(1));
 		jpb = new JProgressBar();
 		overlay = new Overlay();
 		interval = new FinalInterval(originalimg.dimension(0), originalimg.dimension(1));
 		peaks = new ArrayList<RefinedPeak<Point>>();
-		ZTRois = new HashMap<String, ArrayList<PreRoiobject>>();
+		ZTRois = new ConcurrentHashMap<String, ArrayList<PreRoiobject>>();
 		threeDTRois = new HashMap<Integer, ArrayList<ThreeDRoiobject>>();
 		CurrentPreRoiobject = new ArrayList<PreRoiobject>();
 		configDriver = new SnakeConfigDriver();
@@ -468,6 +464,8 @@ public class InteractiveMethods {
 
 		if (change == ValueChange.FOURTHDIMmouse || change == ValueChange.THIRDDIMmouse) {
 
+			if(!apply3D) {
+			
 			if (imp == null) {
 				imp = ImageJFunctions.show(CurrentView);
 
@@ -490,19 +488,19 @@ public class InteractiveMethods {
 
 			newimg = utility.CovistoSlicer.PREcopytoByteImage(CurrentView);
 
-			if (showMSER &&!apply3D ) {
+			if (showMSER ) {
 
 				MSERSeg computeMSER = new MSERSeg(this, jpb);
 				computeMSER.execute();
 
 			}
 
-			if (showDOG &&!apply3D ) {
+			if (showDOG  ) {
 
 				DOGSeg computeDOG = new DOGSeg(this, jpb);
 				computeDOG.execute();
 			}
-
+			}
 			CovistoZselectPanel.zText.setText("Current Z = " + localthirddim);
 			CovistoZselectPanel.zgenText.setText("Current Z / T = " + localthirddim);
 			CovistoZselectPanel.zslider.setValue(utility.CovistoSlicer.computeScrollbarPositionFromValue(localthirddim,
@@ -873,6 +871,11 @@ public class InteractiveMethods {
 		
 		
 		CovistoDogPanel.inputFieldSpot.addTextListener(new PreDistThresholdListener(this, CovistoDogPanel.distthreshold));
+		CovistoDogPanel.inputtimedist.addTextListener(new PreTimeDistThresholdListener(this, CovistoDogPanel.timethreshold));
+		CovistoDogPanel.inputtimeskip.addTextListener(new PreTimeSkipListener(this, CovistoDogPanel.timeblock));
+		
+		
+		
 
 		CovistoTimeselectPanel.timeslider.addAdjustmentListener(
 				new PreTimeListener(this, CovistoTimeselectPanel.timeText, CovistoTimeselectPanel.timestring,

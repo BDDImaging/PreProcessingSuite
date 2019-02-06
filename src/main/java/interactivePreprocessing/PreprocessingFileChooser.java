@@ -12,6 +12,7 @@ import java.awt.Insets;
 import java.awt.Label;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -84,8 +85,8 @@ public class PreprocessingFileChooser extends JPanel {
 		    
 		    ModePanel.add(SegMode, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
 					GridBagConstraints.HORIZONTAL, insets, 0, 0));
-		    ModePanel.add(TrackMode, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
-					GridBagConstraints.HORIZONTAL, insets, 0, 0));
+		 //   ModePanel.add(TrackMode, new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0, GridBagConstraints.WEST,
+			//		GridBagConstraints.HORIZONTAL, insets, 0, 0));
 		    panelFirst.add(ModePanel, new GridBagConstraints(0, 0, 3, 1, 0.0D, 0.0D, 17, 
 				      -1, new Insets(10, 10, 0, 10), 0, 0));
 		    ModePanel.setBorder(methodborder);
@@ -143,10 +144,9 @@ public class PreprocessingFileChooser extends JPanel {
 		
 		// Tracking and Measurement is done with imageA 
         
-	    
 		RandomAccessibleInterval<FloatType> image = ImageJFunctions.convertFloat(impA);
 		
-		new InteractiveMethods(image, chooserA.getSelectedFile(), onlySeg, TrackandSeg).run(null);
+		new InteractiveMethods(image, chooserA.getSelectedFile().getParentFile(), onlySeg, TrackandSeg, impA.getOriginalFileInfo().fileName).run(null);
 		close(parent);
 
 		
@@ -161,7 +161,7 @@ public class PreprocessingFileChooser extends JPanel {
 		RandomAccessibleInterval<FloatType> image = ImageJFunctions.convertFloat(impA);
 		
 		
-		new InteractiveMethods(image, onlySeg, TrackandSeg).run(null);
+		new InteractiveMethods(image,new File(impA.getOriginalFileInfo().directory), onlySeg, TrackandSeg, impA.getOriginalFileInfo().fileName).run(null);
 		close(parent);
 		if(impA!=null)
         impA.close();
